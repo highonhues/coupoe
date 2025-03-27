@@ -1,0 +1,836 @@
+Transferred:   	          0 B / 0 B, -, 0 B/s, ETA -
+Elapsed time:        34.4sTransferred:   	          0 B / 1.563 GiB, 0%, 0 B/s, ETA -
+Transferred:            0 / 15, 0%
+Elapsed time:        34.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:  0% /381.810Mi, 0/s, -
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: transferringTransferred:   	   18.625 MiB / 1.563 GiB, 1%, 0 B/s, ETA -
+Transferred:            0 / 15, 0%
+Elapsed time:        35.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:  4% /381.810Mi, 0/s, -
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: transferringTransferred:   	   54.746 MiB / 1.701 GiB, 3%, 25.152 MiB/s, ETA 1m7s
+Transferred:            0 / 15, 0%
+Elapsed time:        35.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz:  5% /141.298Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 12% /381.810Mi, 25.499Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: transferringTransferred:   	   93.867 MiB / 1.817 GiB, 5%, 25.152 MiB/s, ETA 1m10s
+Transferred:            0 / 15, 0%
+Elapsed time:        36.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 10% /141.298Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 18% /381.810Mi, 25.499Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz:  8% /119.403Mi, 0/s, -Transferred:   	  129.742 MiB / 1.817 GiB, 7%, 49.746 MiB/s, ETA 34s
+Transferred:            0 / 15, 0%
+Elapsed time:        36.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 14% /141.298Mi, 15.995Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 24% /381.810Mi, 36.875Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 13% /119.403Mi, 0/s, -Transferred:   	  167.439 MiB / 1.834 GiB, 9%, 49.746 MiB/s, ETA 34s
+Transferred:            1 / 15, 7%
+Elapsed time:        37.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: 16% /12.363Mi, 0/s, -
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 18% /141.298Mi, 15.995Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 30% /381.810Mi, 36.875Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 15% /119.403Mi, 15.996Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:  0% /321.124Mi, 0/s, -Transferred:   	  203.939 MiB / 1.834 GiB, 11%, 57.855 MiB/s, ETA 28s
+Transferred:            1 / 15, 7%
+Elapsed time:        37.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R1_001.fastq.gz: 64% /12.363Mi, 0/s, -
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 21% /141.298Mi, 13.372Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 36% /381.810Mi, 39.583Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 20% /119.403Mi, 15.996Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:  0% /321.124Mi, 0/s, -Transferred:   	  246.052 MiB / 1.825 GiB, 13%, 57.855 MiB/s, ETA 28s
+Transferred:            2 / 15, 13%
+Elapsed time:        38.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz:  4% /21.565Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 22% /141.298Mi, 13.372Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 41% /381.810Mi, 39.583Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 26% /119.403Mi, 12.498Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:  1% /321.124Mi, 2.875Mi/s, 1
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferringTransferred:   	  291.052 MiB / 1.825 GiB, 16%, 63.435 MiB/s, ETA 24s
+Transferred:            2 / 15, 13%
+Elapsed time:        38.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: 37% /21.565Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 24% /141.298Mi, 10.998Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 45% /381.810Mi, 40.281Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 28% /119.403Mi, 12.498Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:  7% /321.124Mi, 2.875Mi/s, 1
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferringTransferred:   	  337.548 MiB / 1.862 GiB, 18%, 63.435 MiB/s, ETA 24s
+Transferred:            2 / 15, 13%
+Elapsed time:        39.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: 46% /21.565Mi, 7.996Mi/s, 1s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 27% /141.298Mi, 10.998Mi/s, 
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 49% /381.810Mi, 40.281Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 21% /37.752Mi, 0/s, -
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 30% /119.403Mi, 11.478Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 12% /321.124Mi, 18.812Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferringTransferred:   	  384.048 MiB / 1.862 GiB, 20%, 68.610 MiB/s, ETA 22s
+Transferred:            2 / 15, 13%
+Elapsed time:        39.9s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: 69% /21.565Mi, 7.996Mi/s, 0s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 31% /141.298Mi, 9.749Mi/s, 9
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 52% /381.810Mi, 38.125Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 39% /37.752Mi, 0/s, -
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 33% /119.403Mi, 11.478Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 15% /321.124Mi, 18.812Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferringTransferred:   	  428.044 MiB / 1.904 GiB, 22%, 68.610 MiB/s, ETA 22s
+Transferred:            2 / 15, 13%
+Elapsed time:        40.4s
+Transferring:
+ * COUPKO/COUPKO_hash/COU…3_L001_R2_001.fastq.gz: 83% /21.565Mi, 8.498Mi/s, 0s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 11% /43.543Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 33% /141.298Mi, 9.749Mi/s, 9
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 57% /381.810Mi, 38.125Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 47% /37.752Mi, 15.995Mi/s, 1
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 36% /119.403Mi, 9.999Mi/s, 7
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 19% /321.124Mi, 20.583Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferringTransferred:   	  471.364 MiB / 1.809 GiB, 25%, 72.487 MiB/s, ETA 19s
+Transferred:            3 / 15, 20%
+Elapsed time:        40.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 20% /43.543Mi, 0/s, -
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 33% /141.298Mi, 9.399Mi/s, 9
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 60% /381.810Mi, 36.646Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 55% /37.752Mi, 15.995Mi/s, 1
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 37% /119.403Mi, 9.999Mi/s, 7
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 24% /321.124Mi, 20.583Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferringTransferred:   	  514.114 MiB / 1.809 GiB, 28%, 72.487 MiB/s, ETA 18s
+Transferred:            3 / 15, 20%
+Elapsed time:        41.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 29% /43.543Mi, 10.996Mi/s, 2
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 38% /141.298Mi, 9.399Mi/s, 9
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 62% /381.810Mi, 36.646Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 74% /37.752Mi, 11.497Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 41% /119.403Mi, 9.199Mi/s, 7
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 28% /321.124Mi, 22.719Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferringTransferred:   	  557.145 MiB / 1.809 GiB, 30%, 74.070 MiB/s, ETA 17s
+Transferred:            3 / 15, 20%
+Elapsed time:        41.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 34% /43.543Mi, 10.996Mi/s, 2
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 41% /141.298Mi, 8.999Mi/s, 9
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 65% /381.810Mi, 34.500Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 87% /37.752Mi, 11.497Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 44% /119.403Mi, 9.199Mi/s, 7
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 33% /321.124Mi, 22.719Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferringTransferred:   	  600.489 MiB / 1.809 GiB, 32%, 74.070 MiB/s, ETA 16s
+Transferred:            3 / 15, 20%
+Elapsed time:        42.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 41% /43.543Mi, 7.998Mi/s, 3s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 44% /141.298Mi, 8.999Mi/s, 8
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 67% /381.810Mi, 34.500Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_I1_001.fastq.gz: 97% /37.752Mi, 11.665Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 49% /119.403Mi, 8.999Mi/s, 6
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 39% /321.124Mi, 24.975Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferringTransferred:   	  644.241 MiB / 1.839 GiB, 34%, 75.812 MiB/s, ETA 16s
+Transferred:            4 / 15, 27%
+Elapsed time:        42.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 61% /43.543Mi, 7.998Mi/s, 2s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 48% /141.298Mi, 8.999Mi/s, 8
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 70% /381.810Mi, 32.609Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 51% /119.403Mi, 8.999Mi/s, 6
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 43% /321.124Mi, 24.975Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz:  6% /30.209Mi, 0/s, -
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz:  0% /260.489Mi, 0/s, -Transferred:   	  684.241 MiB / 1.839 GiB, 36%, 75.812 MiB/s, ETA 15s
+Transferred:            4 / 15, 27%
+Elapsed time:        43.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 71% /43.543Mi, 9.999Mi/s, 1s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 48% /141.298Mi, 8.999Mi/s, 8
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 72% /381.810Mi, 32.609Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 54% /119.403Mi, 8.857Mi/s, 6
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 49% /321.124Mi, 26.375Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 23% /30.209Mi, 0/s, -
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz:  0% /260.489Mi, 0/s, -Transferred:   	  730.366 MiB / 1.839 GiB, 39%, 76.749 MiB/s, ETA 15s
+Transferred:            4 / 15, 27%
+Elapsed time:        43.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 78% /43.543Mi, 9.999Mi/s, 0s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 50% /141.298Mi, 8.749Mi/s, 8
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 74% /381.810Mi, 30.958Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 58% /119.403Mi, 8.857Mi/s, 5
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 52% /321.124Mi, 26.375Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 33% /30.209Mi, 8.996Mi/s, 2s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz:  7% /260.489Mi, 1.125Mi/s, 3Transferred:   	  775.741 MiB / 1.839 GiB, 41%, 76.749 MiB/s, ETA 14s
+Transferred:            4 / 15, 27%
+Elapsed time:        44.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 87% /43.543Mi, 8.749Mi/s, 0s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 52% /141.298Mi, 8.749Mi/s, 7
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 75% /381.810Mi, 30.958Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 61% /119.403Mi, 8.749Mi/s, 5
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 57% /321.124Mi, 26.232Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 46% /30.209Mi, 8.996Mi/s, 1s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 10% /260.489Mi, 1.125Mi/s, 3Transferred:   	  821.116 MiB / 1.839 GiB, 44%, 78.224 MiB/s, ETA 13s
+Transferred:            4 / 15, 27%
+Elapsed time:        44.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_I1_001.fastq.gz: 96% /43.543Mi, 8.749Mi/s, 0s
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 53% /141.298Mi, 8.333Mi/s, 7
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 77% /381.810Mi, 28.987Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 63% /119.403Mi, 8.749Mi/s, 4
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 62% /321.124Mi, 26.232Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 52% /30.209Mi, 7.498Mi/s, 1s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 15% /260.489Mi, 14.875Mi/s, Transferred:   	  869.538 MiB / 1.800 GiB, 47%, 78.224 MiB/s, ETA 12s
+Transferred:            5 / 15, 33%
+Elapsed time:        45.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 55% /141.298Mi, 8.333Mi/s, 7
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 78% /381.810Mi, 28.987Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 69% /119.403Mi, 8.555Mi/s, 4
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 66% /321.124Mi, 26.703Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 62% /30.209Mi, 7.498Mi/s, 1s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 20% /260.489Mi, 14.875Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferringTransferred:   	  913.788 MiB / 1.800 GiB, 50%, 79.572 MiB/s, ETA 11s
+Transferred:            5 / 15, 33%
+Elapsed time:        45.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 57% /141.298Mi, 7.899Mi/s, 7
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 80% /381.810Mi, 27.386Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 72% /119.403Mi, 8.555Mi/s, 3
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 71% /321.124Mi, 26.703Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_I1_001.fastq.gz: 86% /30.209Mi, 7.332Mi/s, 0s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 25% /260.489Mi, 18.625Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferringTransferred:   	  958.501 MiB / 1.676 GiB, 56%, 79.572 MiB/s, ETA 9s
+Transferred:            6 / 15, 40%
+Elapsed time:        46.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 60% /141.298Mi, 7.899Mi/s, 7
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 82% /381.810Mi, 27.386Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 72% /119.403Mi, 8.600Mi/s, 3
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 75% /321.124Mi, 26.708Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 30% /260.489Mi, 18.625Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: transferringTransferred:   	 1000.626 MiB / 1.676 GiB, 58%, 80.292 MiB/s, ETA 8s
+Transferred:            6 / 15, 40%
+Elapsed time:        46.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 62% /141.298Mi, 7.727Mi/s, 6
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 84% /381.810Mi, 26.375Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 75% /119.403Mi, 8.600Mi/s, 3
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 78% /321.124Mi, 26.708Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 37% /260.489Mi, 20.813Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: transferringTransferred:   	    1.019 GiB / 1.800 GiB, 57%, 80.292 MiB/s, ETA 9s
+Transferred:            6 / 15, 40%
+Elapsed time:        47.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 64% /141.298Mi, 7.727Mi/s, 6
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 87% /381.810Mi, 26.375Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 81% /119.403Mi, 8.181Mi/s, 2
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 80% /321.124Mi, 25.737Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 43% /260.489Mi, 20.813Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz:  1% /127.310Mi, 0/s, -Transferred:   	    1.060 GiB / 1.800 GiB, 59%, 80.704 MiB/s, ETA 9s
+Transferred:            6 / 15, 40%
+Elapsed time:        47.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 67% /141.298Mi, 7.583Mi/s, 6
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 89% /381.810Mi, 25.798Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 83% /119.403Mi, 8.181Mi/s, 2
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 81% /321.124Mi, 25.737Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 50% /260.489Mi, 22.975Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz:  5% /127.310Mi, 0/s, -Transferred:   	    1.099 GiB / 1.800 GiB, 61%, 80.704 MiB/s, ETA 8s
+Transferred:            6 / 15, 40%
+Elapsed time:        48.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 72% /141.298Mi, 7.583Mi/s, 5
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 91% /381.810Mi, 25.798Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 86% /119.403Mi, 8.333Mi/s, 1
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 82% /321.124Mi, 24.045Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 55% /260.489Mi, 22.975Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz:  9% /127.310Mi, 8.996Mi/s, 1Transferred:   	    1.140 GiB / 1.800 GiB, 63%, 80.875 MiB/s, ETA 8s
+Transferred:            6 / 15, 40%
+Elapsed time:        48.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 73% /141.298Mi, 7.846Mi/s, 4
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 93% /381.810Mi, 25.018Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 89% /119.403Mi, 8.333Mi/s, 1
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 84% /321.124Mi, 24.045Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 61% /260.489Mi, 24.687Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 12% /127.310Mi, 8.996Mi/s, 1Transferred:   	    1.182 GiB / 1.800 GiB, 66%, 80.875 MiB/s, ETA 7s
+Transferred:            6 / 15, 40%
+Elapsed time:        49.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 75% /141.298Mi, 7.846Mi/s, 4
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 96% /381.810Mi, 25.018Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 91% /119.403Mi, 8.307Mi/s, 1
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 85% /321.124Mi, 22.948Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 69% /260.489Mi, 24.687Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 17% /127.310Mi, 8.498Mi/s, 1Transferred:   	    1.224 GiB / 1.800 GiB, 68%, 81.091 MiB/s, ETA 7s
+Transferred:            6 / 15, 40%
+Elapsed time:        49.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 82% /141.298Mi, 7.642Mi/s, 3
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 98% /381.810Mi, 24.517Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 94% /119.403Mi, 8.307Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 87% /321.124Mi, 22.948Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 74% /260.489Mi, 26.107Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 20% /127.310Mi, 8.498Mi/s, 1Transferred:   	    1.263 GiB / 1.800 GiB, 70%, 81.091 MiB/s, ETA 6s
+Transferred:            6 / 15, 40%
+Elapsed time:        50.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 84% /141.298Mi, 7.642Mi/s, 2
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz: 99% /381.810Mi, 24.517Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz: 97% /119.403Mi, 8.071Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 88% /321.124Mi, 21.836Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 81% /260.489Mi, 26.107Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 23% /127.310Mi, 8.999Mi/s, 1Transferred:   	    1.300 GiB / 1.800 GiB, 72%, 81.191 MiB/s, ETA 6s
+Transferred:            6 / 15, 40%
+Elapsed time:        50.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 87% /141.298Mi, 8.000Mi/s, 2
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:100% /381.810Mi, 23.808Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R1_001.fastq.gz:100% /119.403Mi, 8.071Mi/s, 0
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 90% /321.124Mi, 21.836Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 89% /260.489Mi, 27.062Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: transferring
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 25% /127.310Mi, 8.999Mi/s, 1Transferred:   	    1.332 GiB / 1.934 GiB, 69%, 81.191 MiB/s, ETA 7s
+Transferred:            7 / 15, 47%
+Elapsed time:        51.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 92% /141.298Mi, 8.000Mi/s, 1
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:100% /381.810Mi, 23.808Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 92% /321.124Mi, 21.223Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz:  0% /97.320Mi, 0/s, -
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 94% /260.489Mi, 27.062Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz:  5% /39.918Mi, 0/s, -
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 29% /127.310Mi, 8.499Mi/s, 1
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  0% /341.965Mi, 0/s, -Transferred:   	    1.364 GiB / 1.934 GiB, 71%, 80.493 MiB/s, ETA 7s
+Transferred:            7 / 15, 47%
+Elapsed time:        51.9s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz: 98% /141.298Mi, 8.125Mi/s, 0
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:100% /381.810Mi, 22.375Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 92% /321.124Mi, 21.223Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz:  3% /97.320Mi, 0/s, -
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz: 98% /260.489Mi, 27.569Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: 17% /39.918Mi, 0/s, -
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 33% /127.310Mi, 8.499Mi/s, 9
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  0% /341.965Mi, 0/s, -Transferred:   	    1.398 GiB / 1.934 GiB, 72%, 80.493 MiB/s, ETA 6s
+Transferred:            7 / 15, 47%
+Elapsed time:        52.4s
+Transferring:
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R1_001.fastq.gz:100% /141.298Mi, 8.125Mi/s, 0
+ * COUPKO/COUPKO_2/COUP-K…0_L001_R2_001.fastq.gz:100% /381.810Mi, 22.375Mi/s, 
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 93% /321.124Mi, 20.058Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 12% /97.320Mi, 8.996Mi/s, 9s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz:100% /260.489Mi, 27.569Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: 35% /39.918Mi, 7.996Mi/s, 3s
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 36% /127.310Mi, 8.999Mi/s, 8
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  1% /341.965Mi, 1.875Mi/s, 2Transferred:   	    1.431 GiB / 1.934 GiB, 74%, 79.746 MiB/s, ETA 6s
+Transferred:            9 / 15, 60%
+Elapsed time:        52.9s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 94% /321.124Mi, 20.058Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 24% /97.320Mi, 8.996Mi/s, 8s
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R2_001.fastq.gz:100% /260.489Mi, 26.049Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: 57% /39.918Mi, 7.996Mi/s, 2s
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 40% /127.310Mi, 8.999Mi/s, 8
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  2% /341.965Mi, 1.875Mi/s, 2Transferred:   	    1.463 GiB / 1.934 GiB, 76%, 79.746 MiB/s, ETA 6s
+Transferred:           10 / 15, 67%
+Elapsed time:        53.4s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 97% /321.124Mi, 19.531Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 26% /97.320Mi, 11.998Mi/s, 5
+ * COUPKO/COUPKO_1/COUP-K…9_L001_I1_001.fastq.gz: 85% /39.918Mi, 11.998Mi/s, 0
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 43% /127.310Mi, 8.833Mi/s, 8
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  4% /341.965Mi, 5.625Mi/s, 5Transferred:   	    1.491 GiB / 1.934 GiB, 77%, 78.809 MiB/s, ETA 5s
+Transferred:           11 / 15, 73%
+Elapsed time:        53.9s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 97% /321.124Mi, 19.531Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 32% /97.320Mi, 11.998Mi/s, 5
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 49% /127.310Mi, 8.833Mi/s, 7
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  7% /341.965Mi, 5.625Mi/s, 5Transferred:   	    1.522 GiB / 1.934 GiB, 79%, 78.809 MiB/s, ETA 5s
+Transferred:           11 / 15, 73%
+Elapsed time:        54.4s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz: 98% /321.124Mi, 18.576Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 41% /97.320Mi, 12.665Mi/s, 4
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 59% /127.310Mi, 9.857Mi/s, 5
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:  9% /341.965Mi, 9.958Mi/s, 3Transferred:   	    1.543 GiB / 1.934 GiB, 80%, 77.566 MiB/s, ETA 5s
+Transferred:           11 / 15, 73%
+Elapsed time:        54.9s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:100% /321.124Mi, 18.576Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 41% /97.320Mi, 12.665Mi/s, 4
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 67% /127.310Mi, 9.857Mi/s, 4
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 11% /341.965Mi, 9.958Mi/s, 3Transferred:   	    1.571 GiB / 1.934 GiB, 81%, 77.566 MiB/s, ETA 4s
+Transferred:           11 / 15, 73%
+Elapsed time:        55.4s
+Transferring:
+ * COUPKO/COUPKO_4/COUP-K…2_L001_R2_001.fastq.gz:100% /321.124Mi, 17.689Mi/s, 
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 51% /97.320Mi, 11.694Mi/s, 4
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 74% /127.310Mi, 11.249Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 14% /341.965Mi, 11.594Mi/s, Transferred:   	    1.593 GiB / 1.934 GiB, 82%, 75.906 MiB/s, ETA 4s
+Transferred:           12 / 15, 80%
+Elapsed time:        55.9s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 55% /97.320Mi, 11.694Mi/s, 3
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 83% /127.310Mi, 11.249Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 16% /341.965Mi, 11.594Mi/s, Transferred:   	    1.612 GiB / 1.934 GiB, 83%, 75.906 MiB/s, ETA 4s
+Transferred:           12 / 15, 80%
+Elapsed time:        56.4s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 63% /97.320Mi, 11.599Mi/s, 3
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 87% /127.310Mi, 11.777Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 12.425Mi/s, Transferred:   	    1.628 GiB / 1.934 GiB, 84%, 73.693 MiB/s, ETA 4s
+Transferred:           12 / 15, 80%
+Elapsed time:        56.9s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 68% /97.320Mi, 11.599Mi/s, 2
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R1_001.fastq.gz: 95% /127.310Mi, 11.777Mi/s, 
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 12.425Mi/s, Transferred:   	    1.638 GiB / 1.934 GiB, 85%, 73.693 MiB/s, ETA 4s
+Transferred:           13 / 15, 87%
+Elapsed time:        57.4s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 73% /97.320Mi, 11.999Mi/s, 2
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 10.667Mi/s, Transferred:   	    1.646 GiB / 1.934 GiB, 85%, 70.607 MiB/s, ETA 4s
+Transferred:           13 / 15, 87%
+Elapsed time:        57.9s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 82% /97.320Mi, 11.999Mi/s, 1
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 10.667Mi/s, Transferred:   	    1.653 GiB / 1.934 GiB, 85%, 70.607 MiB/s, ETA 4s
+Transferred:           13 / 15, 87%
+Elapsed time:        58.4s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 90% /97.320Mi, 12.571Mi/s, 0
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 9.143Mi/s, 3Transferred:   	    1.658 GiB / 1.934 GiB, 86%, 67.194 MiB/s, ETA 4s
+Transferred:           13 / 15, 87%
+Elapsed time:        58.9s
+Transferring:
+ * COUPKO/COUPKO_3/COUP-K…1_L001_R1_001.fastq.gz: 95% /97.320Mi, 12.571Mi/s, 0
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 9.143Mi/s, 3Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 67.194 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:        59.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 8.000Mi/s, 3Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 63.577 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:        59.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 8.000Mi/s, 3Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 63.577 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m0.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 7.111Mi/s, 3Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 59.603 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m0.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 7.111Mi/s, 3Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 59.603 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m1.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 6.400Mi/s, 4Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 55.878 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m1.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 6.400Mi/s, 4Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 55.878 MiB/s, ETA 4s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m2.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 5.818Mi/s, 4Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 52.386 MiB/s, ETA 5s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m2.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 5.818Mi/s, 4Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 52.386 MiB/s, ETA 5s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m3.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 5.333Mi/s, 5Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 49.112 MiB/s, ETA 5s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m3.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 5.333Mi/s, 5Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 49.112 MiB/s, ETA 5s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m4.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.923Mi/s, 5Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 46.042 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m4.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.923Mi/s, 5Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 46.042 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m5.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.571Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 43.164 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m5.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.571Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 43.164 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m6.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.267Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 40.467 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m6.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.267Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 40.467 MiB/s, ETA 6s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m7.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.000Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 37.937 MiB/s, ETA 7s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m7.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 4.000Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 37.937 MiB/s, ETA 7s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m8.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.750Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 35.566 MiB/s, ETA 7s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m8.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.750Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 35.566 MiB/s, ETA 7s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m9.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.516Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 33.344 MiB/s, ETA 8s
+Transferred:           14 / 15, 93%
+Elapsed time:       1m9.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.516Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 33.344 MiB/s, ETA 8s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m10.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.296Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 31.260 MiB/s, ETA 8s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m10.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.296Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 31.260 MiB/s, ETA 8s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m11.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.090Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 29.306 MiB/s, ETA 9s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m11.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 3.090Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 29.306 MiB/s, ETA 9s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m12.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.897Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 27.474 MiB/s, ETA 10s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m12.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.897Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 27.474 MiB/s, ETA 10s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m13.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.716Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 25.757 MiB/s, ETA 10s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m13.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.716Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 25.757 MiB/s, ETA 10s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m14.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.546Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 24.147 MiB/s, ETA 11s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m14.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.546Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 24.147 MiB/s, ETA 11s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m15.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.387Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 22.638 MiB/s, ETA 12s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m15.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.387Mi/s, 1Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 22.638 MiB/s, ETA 12s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m16.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.238Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 21.223 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m16.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.238Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 21.223 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m17.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.098Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 19.897 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m17.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 2.098Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 19.897 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m18.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.967Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 18.653 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m18.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.967Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 18.653 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m19.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.844Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 17.487 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m19.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.844Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 17.487 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m20.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.729Mi/s, 2Transferred:   	    1.663 GiB / 1.934 GiB, 86%, 16.394 MiB/s, ETA 16s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m20.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 18% /341.965Mi, 1.729Mi/s, 2Transferred:   	    1.674 GiB / 1.934 GiB, 87%, 16.394 MiB/s, ETA 16s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m21.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 22% /341.965Mi, 2.003Mi/s, 2Transferred:   	    1.678 GiB / 1.934 GiB, 87%, 16.206 MiB/s, ETA 16s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m21.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 23% /341.965Mi, 2.003Mi/s, 2Transferred:   	    1.690 GiB / 1.934 GiB, 87%, 16.206 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m22.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 26% /341.965Mi, 2.847Mi/s, 1Transferred:   	    1.702 GiB / 1.934 GiB, 88%, 16.216 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m22.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 30% /341.965Mi, 2.847Mi/s, 1Transferred:   	    1.714 GiB / 1.934 GiB, 89%, 16.216 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m23.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 34% /341.965Mi, 4.247Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 16.757 MiB/s, ETA 12s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m23.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.247Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 16.757 MiB/s, ETA 12s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m24.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 5.052Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 16.296 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m24.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 5.052Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 16.296 MiB/s, ETA 13s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m25.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.736Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 15.278 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m25.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.736Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 15.278 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m26.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.440Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 14.323 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m26.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.440Mi/s, 4Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 14.323 MiB/s, ETA 14s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m27.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.163Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 13.428 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m27.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 4.163Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 13.428 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m28.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.903Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 12.588 MiB/s, ETA 16s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m28.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.903Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 12.588 MiB/s, ETA 16s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m29.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.659Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 11.802 MiB/s, ETA 18s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m29.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.659Mi/s, 5Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 11.802 MiB/s, ETA 18s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m30.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.430Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 11.064 MiB/s, ETA 19s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m30.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.430Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 11.064 MiB/s, ETA 19s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m31.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.216Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 10.372 MiB/s, ETA 20s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m31.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.216Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 10.372 MiB/s, ETA 20s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m32.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.015Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 9.724 MiB/s, ETA 22s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m32.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 3.015Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 9.724 MiB/s, ETA 22s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m33.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.826Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 9.116 MiB/s, ETA 23s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m33.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.826Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 9.116 MiB/s, ETA 23s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m34.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.650Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 8.547 MiB/s, ETA 25s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m34.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.650Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 8.547 MiB/s, ETA 25s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m35.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.484Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 8.012 MiB/s, ETA 26s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m35.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.484Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 8.012 MiB/s, ETA 26s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m36.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.329Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 7.512 MiB/s, ETA 28s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m36.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.329Mi/s, 1Transferred:   	    1.725 GiB / 1.934 GiB, 89%, 7.512 MiB/s, ETA 28s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m37.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 37% /341.965Mi, 2.183Mi/s, 1Transferred:   	    1.736 GiB / 1.934 GiB, 90%, 7.042 MiB/s, ETA 28s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m37.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 40% /341.965Mi, 2.183Mi/s, 1Transferred:   	    1.764 GiB / 1.934 GiB, 91%, 7.042 MiB/s, ETA 24s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m38.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 49% /341.965Mi, 3.648Mi/s, 4Transferred:   	    1.793 GiB / 1.934 GiB, 93%, 9.321 MiB/s, ETA 15s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m38.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 57% /341.965Mi, 3.648Mi/s, 3Transferred:   	    1.821 GiB / 1.934 GiB, 94%, 9.321 MiB/s, ETA 12s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m39.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 66% /341.965Mi, 7.108Mi/s, 1Transferred:   	    1.848 GiB / 1.934 GiB, 96%, 12.418 MiB/s, ETA 7s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m39.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 74% /341.965Mi, 7.108Mi/s, 1Transferred:   	    1.869 GiB / 1.934 GiB, 97%, 12.418 MiB/s, ETA 5s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m40.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 80% /341.965Mi, 10.005Mi/s, Transferred:   	    1.891 GiB / 1.934 GiB, 98%, 14.632 MiB/s, ETA 3s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m40.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 87% /341.965Mi, 10.005Mi/s, Transferred:   	    1.918 GiB / 1.934 GiB, 99%, 14.632 MiB/s, ETA 1s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m41.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz: 95% /341.965Mi, 12.224Mi/s, Transferred:   	    1.934 GiB / 1.934 GiB, 100%, 16.881 MiB/s, ETA 0s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m41.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:100% /341.965Mi, 12.224Mi/s, Transferred:   	    1.934 GiB / 1.934 GiB, 100%, 16.881 MiB/s, ETA 0s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m42.4s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:100% /341.965Mi, 13.358Mi/s, Transferred:   	    1.934 GiB / 1.934 GiB, 100%, 16.647 MiB/s, ETA 0s
+Transferred:           14 / 15, 93%
+Elapsed time:      1m42.9s
+Transferring:
+ * COUPKO/COUPKO_1/COUP-K…9_L001_R2_001.fastq.gz:100% /341.965Mi, 13.358Mi/s, Transferred:   	    1.934 GiB / 1.934 GiB, 100%, 16.647 MiB/s, ETA 0s
+Transferred:           15 / 15, 100%
+Elapsed time:      1m43.0s
+check, the script has run

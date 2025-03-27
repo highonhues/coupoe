@@ -1,0 +1,7 @@
+# Ignore large data files
+*.fastq.gz
+*.bam
+*.bai
+
+# Ignore entire data directories
+data/
