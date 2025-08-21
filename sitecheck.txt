@@ -1,0 +1,489 @@
+cellranger sitecheck (cellranger-9.0.1)
+Copyright 2023 10x Genomics, Inc. All rights reserved.
+-------------------------------------------------------------------------------
+Mon Aug 11 20:31:14 PDT 2025
+
+=====================================================================
+System Info
+uname -a
+---------------------------------------------------------------------
+Linux spartan03.cluster 5.14.0-570.30.1.el9_6.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Jul 30 15:58:22 UTC 2025 x86_64
+=====================================================================
+
+=====================================================================
+CPU Model
+grep -m 1 'model name' /proc/cpuinfo | cut -d ':' -f 2 | sed 's/^[ 	]*//'
+---------------------------------------------------------------------
+INTEL(R) XEON(R) GOLD 5515+
+=====================================================================
+
+=====================================================================
+Linux Distro
+cat /etc/*-release | sort -u
+---------------------------------------------------------------------
+ANSI_COLOR="0;32"
+BUG_REPORT_URL="https://bugs.rockylinux.org/"
+CPE_NAME="cpe:/o:rocky:rocky:9::baseos"
+HOME_URL="https://rockylinux.org/"
+ID="rocky"
+ID_LIKE="rhel centos fedora"
+LOGO="fedora-logo-icon"
+NAME="Rocky Linux"
+PLATFORM_ID="platform:el9"
+PRETTY_NAME="Rocky Linux 9.6 (Blue Onyx)"
+REDHAT_SUPPORT_PRODUCT="Rocky Linux"
+REDHAT_SUPPORT_PRODUCT_VERSION="9.6"
+ROCKY_SUPPORT_PRODUCT="Rocky-Linux-9"
+ROCKY_SUPPORT_PRODUCT_VERSION="9.6"
+Rocky Linux release 9.6 (Blue Onyx)
+SUPPORT_END="2032-05-31"
+VENDOR_NAME="RESF"
+VENDOR_URL="https://resf.org/"
+VERSION="9.6 (Blue Onyx)"
+VERSION_ID="9.6"
+=====================================================================
+
+=====================================================================
+Kernel Build
+cat /proc/version
+---------------------------------------------------------------------
+Linux version 5.14.0-570.30.1.el9_6.x86_64 (mockbuild@iad1-prod-build001.bld.equ.rockylinux.org) (gcc (GCC) 11.5.0 20240719 (Red Hat 11.5.0-5), GNU ld version 2.35.2-63.el9) #1 SMP PREEMPT_DYNAMIC Wed Jul 30 15:58:22 UTC 2025
+=====================================================================
+
+=====================================================================
+glibc version
+ldd --version | head -n 1
+---------------------------------------------------------------------
+ldd (GNU libc) 2.34
+=====================================================================
+
+=====================================================================
+CPU Support
+grep -m 1 'flags' /proc/cpuinfo | cut -d ':' -f 2 | sed 's/^[ 	]*//'
+---------------------------------------------------------------------
+fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid dca sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb cat_l3 cat_l2 cdp_l3 intel_ppin cdp_l2 ssbd mba ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb intel_pt avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local split_lock_detect avx_vnni avx512_bf16 wbnoinvd dtherm ida arat pln pts hwp hwp_act_window hwp_epp hwp_pkg_req vnmi avx512vbmi umip pku ospke waitpkg avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg tme avx512_vpopcntdq la57 rdpid bus_lock_detect cldemote movdiri movdir64b enqcmd fsrm md_clear serialize tsxldtrk pconfig arch_lbr ibt amx_bf16 avx512_fp16 amx_tile amx_int8 flush_l1d arch_capabilities
+=====================================================================
+
+=====================================================================
+CPU Sockets
+grep 'physical id' /proc/cpuinfo | sort -u | wc -l
+---------------------------------------------------------------------
+2
+=====================================================================
+
+=====================================================================
+CPU Cores
+grep -c processor /proc/cpuinfo
+---------------------------------------------------------------------
+16
+=====================================================================
+
+=====================================================================
+Memory Total
+grep MemTotal /proc/meminfo | cut -d ':' -f 2 | sed 's/^[ 	]*//'
+---------------------------------------------------------------------
+263294452 kB
+=====================================================================
+
+=====================================================================
+Filesystem Options
+mount | cut -d ' ' -f 5,6
+---------------------------------------------------------------------
+proc (rw,nosuid,nodev,noexec,relatime)
+sysfs (rw,nosuid,nodev,noexec,relatime)
+devtmpfs (rw,nosuid)
+securityfs (rw,nosuid,nodev,noexec,relatime)
+tmpfs (rw,nosuid,nodev)
+devpts (rw,nosuid,noexec,relatime)
+tmpfs (rw,nosuid,nodev)
+cgroup2 (rw,nosuid,nodev,noexec,relatime)
+pstore (rw,nosuid,nodev,noexec,relatime)
+efivarfs (rw,nosuid,nodev,noexec,relatime)
+bpf (rw,nosuid,nodev,noexec,relatime)
+xfs (rw,relatime)
+autofs (rw,relatime)
+hugetlbfs (rw,relatime)
+mqueue (rw,nosuid,nodev,noexec,relatime)
+debugfs (rw,nosuid,nodev,noexec,relatime)
+tracefs (rw,nosuid,nodev,noexec,relatime)
+configfs (rw,nosuid,nodev,noexec,relatime)
+ramfs (ro,nosuid,nodev,noexec,relatime)
+ramfs (ro,nosuid,nodev,noexec,relatime)
+fusectl (rw,nosuid,nodev,noexec,relatime)
+nfsd (rw,relatime)
+xfs (rw,relatime)
+vfat (rw,relatime)
+ramfs (ro,nosuid,nodev,noexec,relatime)
+rpc_pipefs (rw,relatime)
+nfs (rw,relatime)
+beegfs (rw,nosuid,relatime)
+tmpfs (rw,nosuid,nodev,relatime)
+tmpfs (rw,nosuid,nodev,relatime)
+tmpfs (rw,nosuid,nodev,relatime)
+tmpfs (rw,nosuid,nodev,relatime)
+=====================================================================
+
+=====================================================================
+User Limits
+bash -c 'ulimit -a'
+---------------------------------------------------------------------
+core file size          (blocks, -c) unlimited
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 1028258
+max locked memory       (kbytes, -l) unlimited
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 524288
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) unlimited
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 1028258
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+=====================================================================
+
+=====================================================================
+User Limits (hard)
+bash -c 'ulimit -aH'
+---------------------------------------------------------------------
+core file size          (blocks, -c) unlimited
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 1028258
+max locked memory       (kbytes, -l) unlimited
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 524288
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) unlimited
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 1028258
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+=====================================================================
+
+=====================================================================
+Global File Limit
+cat /proc/sys/fs/file-max /proc/sys/fs/file-nr
+---------------------------------------------------------------------
+9223372036854775807
+6176	0	9223372036854775807
+=====================================================================
+
+=====================================================================
+Memory config
+sysctl vm
+---------------------------------------------------------------------
+vm.admin_reserve_kbytes = 8192
+vm.compact_unevictable_allowed = 1
+vm.compaction_proactiveness = 20
+vm.dirty_background_bytes = 0
+vm.dirty_background_ratio = 10
+vm.dirty_bytes = 0
+vm.dirty_expire_centisecs = 3000
+vm.dirty_ratio = 40
+vm.dirty_writeback_centisecs = 500
+vm.dirtytime_expire_seconds = 43200
+vm.extfrag_threshold = 500
+vm.hugetlb_optimize_vmemmap = 0
+vm.hugetlb_shm_group = 0
+vm.laptop_mode = 0
+vm.legacy_va_layout = 0
+vm.lowmem_reserve_ratio = 256	256	32	0	0
+vm.max_map_count = 262144
+vm.memfd_noexec = 0
+vm.memory_failure_early_kill = 0
+vm.memory_failure_recovery = 1
+vm.min_free_kbytes = 90112
+vm.min_slab_ratio = 5
+vm.min_unmapped_ratio = 1
+vm.mmap_min_addr = 65536
+vm.nr_hugepages = 0
+vm.nr_hugepages_mempolicy = 0
+vm.nr_overcommit_hugepages = 0
+vm.numa_stat = 1
+vm.numa_zonelist_order = Node
+vm.oom_dump_tasks = 1
+vm.oom_kill_allocating_task = 0
+vm.overcommit_kbytes = 0
+vm.overcommit_memory = 0
+vm.overcommit_ratio = 50
+vm.page-cluster = 3
+vm.page_lock_unfairness = 5
+vm.panic_on_oom = 0
+vm.percpu_pagelist_high_fraction = 0
+vm.stat_interval = 1
+vm.swappiness = 10
+vm.unprivileged_userfaultfd = 0
+vm.user_reserve_kbytes = 131072
+vm.vfs_cache_pressure = 100
+vm.watermark_boost_factor = 15000
+vm.watermark_scale_factor = 10
+vm.zone_reclaim_mode = 0
+=====================================================================
+
+=====================================================================
+THP memory config
+cat /sys/kernel/mm/transparent_hugepage/enabled
+---------------------------------------------------------------------
+[always] madvise never
+=====================================================================
+
+=====================================================================
+cgroups
+cat /proc/self/cgroup
+---------------------------------------------------------------------
+0::/user.slice/user-1420.slice/session-124.scope
+=====================================================================
+
+=====================================================================
+cgroup mem stats
+cat /sys/fs/cgroup/user.slice/user-1420.slice/session-124.scope/memory.stat
+---------------------------------------------------------------------
+anon 426590208
+file 104394752
+kernel 70877184
+kernel_stack 1196032
+pagetables 8495104
+sec_pagetables 0
+percpu 3456
+sock 0
+vmalloc 0
+shmem 0
+zswap 0
+zswapped 0
+file_mapped 55939072
+file_dirty 0
+file_writeback 0
+swapcached 0
+anon_thp 20971520
+file_thp 0
+shmem_thp 0
+inactive_anon 0
+active_anon 426409984
+inactive_file 0
+active_file 104382464
+unevictable 0
+slab_reclaimable 55385008
+slab_unreclaimable 3899448
+slab 59284456
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgscan 0
+pgsteal 0
+pgscan_kswapd 0
+pgscan_direct 0
+pgscan_khugepaged 0
+pgsteal_kswapd 0
+pgsteal_direct 0
+pgsteal_khugepaged 0
+pgfault 1149492
+pgmajfault 7349
+pgrefill 0
+pgactivate 0
+pgdeactivate 0
+pglazyfree 215
+pglazyfreed 0
+zswpin 0
+zswpout 0
+zswpwb 0
+thp_fault_alloc 115
+thp_collapse_alloc 0
+thp_swpout 0
+thp_swpout_fallback 0
+=====================================================================
+
+=====================================================================
+memory soft limit
+cat /sys/fs/cgroup/user.slice/user-1420.slice/session-124.scope/memory.high /sys/fs/cgroup/user.slice/user-1420.slice/session-124.scope/memory.swap.high
+---------------------------------------------------------------------
+max
+max
+=====================================================================
+
+=====================================================================
+memory hard limit
+cat /sys/fs/cgroup/user.slice/user-1420.slice/session-124.scope/memory.max
+---------------------------------------------------------------------
+max
+=====================================================================
+
+=====================================================================
+memory swap limit
+cat /sys/fs/cgroup/user.slice/user-1420.slice/session-124.scope/memory.swap.max
+---------------------------------------------------------------------
+max
+=====================================================================
+
+=====================================================================
+Container
+[ -e /.dockerenv ] || [ -e /.dockerinit ] \
+		|| [ ! -z "$container" ] || grep -m 1 -E 'docker|lxc' /proc/1/cgroup \
+		> /dev/null && echo 'Detected'
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+init process
+head -n 1 /proc/1/sched | cut -d ' ' -f 1
+---------------------------------------------------------------------
+systemd (1, #threads: 1)
+=====================================================================
+
+=====================================================================
+SGE Submit
+which qsub
+---------------------------------------------------------------------
+/usr/bin/qsub
+=====================================================================
+
+=====================================================================
+SGE CLUSTER_NAME
+echo $SGE_CLUSTER_NAME
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+SGE JOB_NAME
+echo $JOB_NAME
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+qconf
+which qconf
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+LSF Submit
+which bsub
+---------------------------------------------------------------------
+/usr/bin/bsub
+=====================================================================
+
+=====================================================================
+LSF LSB_JOBNAME
+echo $LSB_JOBNAME
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+HTCondor Submit
+which condor_submit
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+Batch system
+echo $BATCH_SYSTEM
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+BCL2FASTQ 1
+which configureBclToFastq.pl
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+BCL2FASTQ 1
+which bcl2fastq
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+Java
+which java
+---------------------------------------------------------------------
+/usr/bin/java
+=====================================================================
+
+=====================================================================
+Java Version
+java -version 2>&1 | cat
+---------------------------------------------------------------------
+openjdk version "17.0.16" 2025-07-15 LTS
+OpenJDK Runtime Environment (Red_Hat-17.0.16.0.8-1) (build 17.0.16+8-LTS)
+OpenJDK 64-Bit Server VM (Red_Hat-17.0.16.0.8-1) (build 17.0.16+8-LTS, mixed mode, sharing)
+=====================================================================
+
+=====================================================================
+10X Refdata
+echo $TENX_REFDATA
+---------------------------------------------------------------------
+=====================================================================
+
+=====================================================================
+slurm info
+sinfo -O nodes,maxcpuspernode,memory,time
+---------------------------------------------------------------------
+NODES               MAX_CPUS_PER_NODE   MEMORY              TIMELIMIT           
+84                  UNLIMITED           95000+              infinite
+=====================================================================
+
+=====================================================================
+MRP
+mrp --version
+---------------------------------------------------------------------
+v4.0.13
+=====================================================================
+
+=====================================================================
+/scratch/home/agupta1/yard/cellranger-9.0.1/external/martian/jobmanagers/slurm.template
+cat /scratch/home/agupta1/yard/cellranger-9.0.1/external/martian/jobmanagers/slurm.template
+---------------------------------------------------------------------
+#!/usr/bin/env bash
+#
+# Copyright (c) 2016 10x Genomics, Inc. All rights reserved.
+#
+# =============================================================================
+# Setup Instructions
+# =============================================================================
+#
+# 1. Add any other necessary Slurm arguments such as partition (-p) or account
+#    (-A). If your system requires a walltime (-t), 24 hours (24:00:00) is
+#    sufficient.  We recommend you do not remove any arguments below or Martian
+#    may not run properly.
+#
+# 2. Change filename of slurm.template.example to slurm.template.
+#
+# =============================================================================
+# Template
+# =============================================================================
+#
+#SBATCH -J __MRO_JOB_NAME__
+#SBATCH --export=ALL
+#SBATCH --nodes=1
+#SBATCH --ntasks=1 --cpus-per-task=__MRO_THREADS__
+### Alternatively: --ntasks-per-node=__MRO_THREADS__
+###   Consult with your cluster administrators to find the combination that
+###   works best for single-node, multi-threaded applications on your system.
+#SBATCH --signal=2
+#SBATCH --no-requeue
+### NOTE: if your cluster is configured to use VSizeFactor with a value less
+### than 400, replace __MRO_MEM_GB__ below with __MRO_VMEM_GB__, as many stages
+### require their virtual address space to be significantly larger than their
+### memory requirement.
+#SBATCH --mem=__MRO_MEM_GB__G
+#SBATCH -o __MRO_STDOUT__
+#SBATCH -e __MRO_STDERR__
+
+__MRO_CMD__
+=====================================================================
+
+=====================================================================
+mrp templates
+ls $(dirname $(dirname $(which mrp)))/jobmanagers/*.template
+---------------------------------------------------------------------
+/scratch/home/agupta1/yard/cellranger-9.0.1/external/martian/jobmanagers/slurm.template
+=====================================================================
+

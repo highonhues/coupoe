@@ -5,3 +5,4 @@
 
 # Ignore entire data directories
 data/
+logs/
