@@ -8,7 +8,7 @@
 #=========================#
 # USER CONFIGURATION      #
 #=========================#
-OUTDIR="/scratch/home/agupta1/TB/tb-data/ref_mm10"
+OUTDIR="/scratch/home/agupta1/coup/data/ref_mm10"
 URL="https://cf.10xgenomics.com/supp/cell-exp/refdata-gex-mm10-2020-A.tar.gz"
 FILENAME=$(basename $URL)
 #=========================#
