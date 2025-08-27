@@ -1,4 +1,7 @@
 #!/bin/bash
+
+######## NEEDS CORRECTION ############# DO NOT USE #########
+
 #renames fastq files more descriptively if you optained them from running bamtofastq
 # use it along with the --path argument giving the path to your main data dir
 
