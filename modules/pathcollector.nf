@@ -37,9 +37,13 @@ process PATH_COLLECTOR{
             local_reads.append(link)
 
         print(f"{meta}\t{' '.join(local_reads)}")
-    
 
-
+    #bash
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: $(python3 --version | awk '{print \$2}')
+        pandas: $(python3 -c 'import pandas as pd; print(pd.__version__)')
+    END_VERSIONS
 
     """
 
