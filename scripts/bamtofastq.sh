@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=bamtofastq
 #SBATCH --mem=20G
-#SBATCH --array=1-4
+#SBATCH --array=1-4                                                      #Submits this as a job array of 4 tasks (task IDs = 1, 2, 3, 4)
 #SBATCH --cpus-per-task=16                  
 #SBATCH --output=/scratch/home/agupta1/coup/logs/bamtofastq_%j.output
 #SBATCH --error=/scratch/home/agupta1/coup/logs/bamtofastq_%j.error
@@ -16,7 +16,7 @@ BAM_FILES=(
 )
 
 # Get current array task
-BAM_FILE=${BAM_FILES[$SLURM_ARRAY_TASK_ID-1]}
+BAM_FILE=${BAM_FILES[$SLURM_ARRAY_TASK_ID-1]} #indexing the array to grab items from 0 to 3
 
 # Get the directory where the BAM file is located
 BAM_DIR=$(dirname "$BAM_FILE")
