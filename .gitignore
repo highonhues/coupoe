@@ -7,5 +7,6 @@ samplesheet.csv
 # Ignore entire data directories
 data/
 logs/
+results/
 .nextflow/
 .nf-launch/

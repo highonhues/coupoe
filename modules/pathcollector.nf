@@ -2,17 +2,18 @@
 
 process PATH_COLLECTOR{
     
-    conda 'conda install conda-forge::python=3.12.7'
+    conda 'conda-forge::python=3.12.7 conda-forge::pandas=2.1.4'
     
     input:
     path samplesheet
 
     output:
     tuple val(meta),path(reads)
+    path "versions.yml", emit: versions
 
     script:
     """
-    #!/usr/bin/env python3
+    python3 <<'PYCODE'
     import pandas as pd
     import os
     df = pd.read_csv("${samplesheet}")
@@ -37,6 +38,8 @@ process PATH_COLLECTOR{
             local_reads.append(link)
 
         print(f"{meta}\t{' '.join(local_reads)}")
+    PYCODE
+
 
     #bash
     cat <<-END_VERSIONS > versions.yml
