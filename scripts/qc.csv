@@ -1,0 +1,14 @@
+sample_name,path_to_sample
+COUPOE_PP1,/scratch/home/agupta1/coup/data/COUPOE_PP1/COUPOE_PP1_fastq/PP1_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
+COUPOE_PP2,/scratch/home/agupta1/coup/data/COUPOE_PP2/COUPOE_PP2_fastq/PP2_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
+COUPOE_MLN,/scratch/home/agupta1/coup/data/COUPOE_MLN/COUPOE_MLN_fastq/MLN_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
+COUPWT_MLN_NEG1,/scratch/home/agupta1/coup/data/COUPWT_MLN_NEG1/COUPWT_MLN_NEG1_fastq/COUPWT_MLN_NEG_0_1_HW7JNBGX7
+COUPWT_PP,/scratch/home/agupta1/coup/data/PP1_0_1_HVNFCBGX3_WT
+RBPJKO_PP2,/scratch/home/agupta1/coup/data/RBPJKO_PP2
+COUPKO_1,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_1
+COUPKO_2,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_2
+COUPKO_3,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_3
+COUPKO_4,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_4
+COUPKO_hash,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_hash
+COUPOE_PP_POS1,/scratch/home/agupta1/coup/data/COUPOE_PP_POS1
+COUPOE_MLN_POS,/scratch/home/agupta1/coup/data/COUPOE_MLN_POS

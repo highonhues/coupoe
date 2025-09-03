@@ -1,3 +1,3 @@
 sample_name,path_to_fastq
-COUPOE_PP1,/scratch/home/agupta1/coup/data/COUPOE_PP1/COUPOE_PP1_fastq/PP1_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
-COUPOE_PP2,/scratch/home/agupta1/coup/data/COUPOE_PP2/COUPOE_PP2_fastq/PP2_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
+COUPOE_MLN,/scratch/home/agupta1/coup/data/COUPOE_MLN/COUPOE_MLN_fastq/MLN_COUPOE-HW2FVBGXB_0_1_HW2FVBGXB
+COUPWT_MLN_NEG1,/scratch/home/agupta1/coup/data/COUPWT_MLN_NEG1/COUPWT_MLN_NEG1_fastq/COUPWT_MLN_NEG_0_1_HW7JNBGX7
