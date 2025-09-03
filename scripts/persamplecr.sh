@@ -1,11 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=cellranger_array
+#SBATCH --job-name=hardcode
 #SBATCH --mem=120G
 #SBATCH --cpus-per-task=28
-#SBATCH --partition=nodes   
-#SBATCH --array=2-3                      
-#SBATCH --output=/scratch/home/agupta1/coup/logs/cR_%A_%j.output
-#SBATCH --error=/scratch/home/agupta1/coup/logs/cR_%A_%j.error
+#SBATCH --partition=nodes                     
+#SBATCH --output=/scratch/home/agupta1/coup/logs/hardcodedcr_%j.output
+#SBATCH --error=/scratch/home/agupta1/coup/logs/hardcodedcr_%j.error
 
     
 #for more on array jobs https://github.com/hbc/knowledgebase/blob/master/rc/arrays_in_slurm.md
@@ -16,19 +15,19 @@ conda activate cellranger
 
 #the csv has header with sample_name,path to fastq folder hence array should always start with 2
 
-samp=$(awk -v awkv="${SLURM_ARRAY_TASK_ID}" -F "," 'NR==awkv {print $1}' samplegiver.csv)
-samp_path=$(awk -v awkv="${SLURM_ARRAY_TASK_ID}" -F "," 'NR==awkv {print $2}' samplegiver.csv)
+# samp=$(awk -v awkv="${SLURM_ARRAY_TASK_ID}" -F "," 'NR==awkv {print $1}' samplegiver.csv)
+# samp_path=$(awk -v awkv="${SLURM_ARRAY_TASK_ID}" -F "," 'NR==awkv {print $2}' samplegiver.csv)
 
 # Make a dedicated output directory for this sample
-outdir=/scratch/home/agupta1/coup/results/${samp}_cr
+outdir=/scratch/home/agupta1/coup/results/COUPOE_PP_POS1_cr
 mkdir -p "$outdir"
 
 cellranger count \
-  --id=${samp}_cr \
+  --id=COUPOE_PP_POS1_cr \
   --transcriptome=/scratch/home/agupta1/coup/data/ref_mm10/refdata-gex-mm10-2020-A \
-  --fastqs=${samp_path} \
-  --sample=${samp} \
+  --fastqs=/scratch/home/agupta1/coup/data/COUPOE_PP_POS1 \
+  --sample=COUPOE_PP_POS1 \
   --output-dir="${outdir}" \
   --create-bam=false \
   --localcores=$SLURM_CPUS_PER_TASK \
-  --localmem=$(( SLURM_MEM_PER_NODE / 1024 ))  # Cell R uses GB units
+  --localmem=120
