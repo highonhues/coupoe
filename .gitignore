@@ -4,6 +4,7 @@
 *.bai
 *.log*
 samplesheet.csv
+
 # Ignore entire data directories
 data/
 logs/
