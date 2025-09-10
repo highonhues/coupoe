@@ -1,3 +1,4 @@
 sample_name,path_to_fastq
-COUPOE_PP,/scratch/home/agupta1/coup/data/COUPOE_PP_POS1
-COUPWT_MLN_NEG1,/scratch/home/agupta1/coup/data/COUPWT_MLN_NEG1/COUPWT_MLN_NEG1_fastq/COUPWT_MLN_NEG_0_1_HW7JNBGX7
+PUB_COUPOE_PP1,/scratch/home/agupta1/coup/data/published_coup/PUB_COUPOE_PP1
+PUB_COUPWT_PP,/scratch/home/agupta1/coup/data/published_coup/PUB_COUPWT_PP
+PUB_COUPOE_PP2,/scratch/home/agupta1/coup/data/published_coup/PUB_COUPOE_PP2

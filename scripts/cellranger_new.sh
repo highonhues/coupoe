@@ -3,7 +3,7 @@
 #SBATCH --mem=120G
 #SBATCH --cpus-per-task=28
 #SBATCH --partition=nodes   
-#SBATCH --array=2-3                      
+#SBATCH --array=2-4                      
 #SBATCH --output=/scratch/home/agupta1/coup/logs/cR_%A_%j.output
 #SBATCH --error=/scratch/home/agupta1/coup/logs/cR_%A_%j.error
 
@@ -29,6 +29,6 @@ cellranger count \
   --fastqs=${samp_path} \
   --sample=${samp} \
   --output-dir="${outdir}" \
-  --create-bam=false \
+  --create-bam=true \
   --localcores=$SLURM_CPUS_PER_TASK \
   --localmem=$(( SLURM_MEM_PER_NODE / 1024 ))  # Cell R uses GB units

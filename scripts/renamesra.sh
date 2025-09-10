@@ -1,14 +1,14 @@
 #!/bin/bash
 
-prefix="PUB_COUPOE_PP2"
+prefix="PUB_COUPOE_PP1"
 basepath="/scratch/home/agupta1/coup/data/published_coup"
 
 # Map run dirs to lanes dict (associative arr) called lanes [key]=val
 declare -A lanes=(
-  [SRR22270424]=L001
-  [SRR22270425]=L002
-  [SRR22270426]=L003
-  [SRR22270427]=L004
+  [SRR22270428]=L001
+  [SRR22270429]=L002
+  [SRR22270430]=L003
+  [SRR22270431]=L004
 )
 
 # loop over keys of lanes  ${array[@]}=values ; ${!array[@]}=keys ; 
