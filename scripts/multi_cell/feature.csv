@@ -1,3 +1,8 @@
 id,name,read,pattern,sequence,feature_type
 HT1,TotalSeq_A0301_HT1,R2,^(BC),ACCCACCAGTAAGAC,Antibody Capture
 HT2,TotalSeq_A0302_HT2,R2,^(BC),GGTCGAGAGCATTCA,Antibody Capture
+
+[samples]
+sample_id,hashtag_ids
+S1,HT1
+S2,HT2
