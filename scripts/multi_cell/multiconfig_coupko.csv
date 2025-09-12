@@ -1,0 +1,23 @@
+[gene-expression]
+reference,/scratch/home/agupta1/coup/data/ref_mm10/refdata-gex-mm10-2020-A
+create-bam,true
+
+[feature]
+reference,/scratch/home/agupta1/coup/scripts/multi_cell/feature_coupko.csv
+
+[libraries]
+fastq_id,fastqs,feature_types
+COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_1,Gene Expression
+COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_2,Gene Expression
+COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_3,Gene Expression
+COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_4,Gene Expression
+COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_hash,Antibody Capture
+
+[samples]
+sample_id,hashtag_ids
+PP_COUPKO_HT6_cre_neg,HT6
+PP_COUPKO_HT7_cre_pos,HT7
+MLN_COUPKO_HT5_cre_pos,HT5
+PLN_COUPKO_HT1_cre_neg,HT1
+PLN_COUPKO_HT4_cre_pos,HT4
+MLN_COUPKO_HT3_cre_neg,HT3

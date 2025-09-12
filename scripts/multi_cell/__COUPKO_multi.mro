@@ -1,0 +1,35 @@
+# [gene-expression]
+# reference,/scratch/home/agupta1/coup/data/ref_mm10/refdata-gex-mm10-2020-A
+# create-bam,true
+# 
+# [feature]
+# reference,/scratch/home/agupta1/coup/scripts/multi_cell/feature_coupko.csv
+# 
+# [libraries]
+# fastq_id,fastqs,feature_types
+# COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_1,Gene Expression
+# COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_2,Gene Expression
+# COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_3,Gene Expression
+# COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_4,Gene Expression
+# COUP-KO,/scratch/home/agupta1/coup/data/COUPKO/COUPKO_hash,Antibody Capture
+# 
+# [samples]
+# sample_id,hashtag_ids
+# PP_COUPKO_HT6_cre_neg,HT6
+# PP_COUPKO_HT7_cre_pos,HT7
+# MLN_COUPKO_HT5_cre_pos,HT5
+# PLN_COUPKO_HT1_cre_neg,HT1
+# PLN_COUPKO_HT4_cre_pos,HT4
+# MLN_COUPKO_HT3_cre_neg,HT3
+@include "rna/sc_multi_cs.mro"
+
+call SC_MULTI_CS(
+    sample_id    = "COUPKO_multi",
+    sample_desc  = "",
+    config       = {
+        bytes: null,
+        file:  "/scratch/home/agupta1/coup/scripts/multi_cell/multiconfig_coupko.csv",
+    },
+    config_hash  = "ca8df935cc7c764abff1478e2de7a18938c89a203f867786525f3ed142da8c30",
+    no_preflight = false,
+)
