@@ -8,6 +8,8 @@ samplesheet.csv
 # Ignore entire data directories
 data/
 logs/
+downstream/*.rds
+downstream/*.R
 results/
 .nextflow/
 .nf-launch/
