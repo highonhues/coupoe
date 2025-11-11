@@ -15,5 +15,7 @@ results/
 # Downstream changes
 
 downstream/*.rds
+downstream/.csv
 downstream/*.R
 downstream/*.Rproj
+downstream/.Rproj.user
