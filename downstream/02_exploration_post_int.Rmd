@@ -1,0 +1,174 @@
+---
+title: "PP_downstream"
+author: "Ananya Gupta"
+date: "2025-11-10"
+output: html_document
+---
+
+
+```{r env_loading, results='FALSE'}
+# Load packages, data and functions
+library(Seurat)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+# Set the random number seed
+set.seed(1234)
+```
+
+```{r}
+# Load it back
+seu <- readRDS("seu_int_layersjoined.rds")
+```
+
+No need to run this as im satisfied with my 0.8 resolution. We have already done
+
+
+seu <- FindClusters(seu, resolution = 0.8, cluster.name = "mnn_clusters") 
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
+```{r Check best clustering, results='hide'}
+seu <- Seurat::FindClusters(seu, resolution = seq(0.1, 1.2, by=0.1))
+#seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+```
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu@meta.data[,grep("RNA_snn_res.", colnames(seu@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+
+
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu, group.by = c("RNA_snn_res.0.6","RNA_snn_res.0.8", "RNA_snn_res.1.1"),ncol=1)
+```
+
+Lymphatic endothelial: Prox1, Lyve1, Pdpn
+
+Pericytes: Itga7, Pdgfrb
+
+Fibroblastic reticular: Pdpn, Ccl19, Pdgfra
+
+Lymphocytes: Ptprc, Cd52
+
+We want blood EC: Flt1+Ly6c1+
+
+```{r}
+Hec_late <- c("Glycam1", "Ggt5","Chst4","Ccl21a")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra","Pdgfrb")
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+
+            #most diff,
+#hec_common <- c("")
+```
+
+```{r}
+# use median to see typical expression per cluster, avoid misleading high expressing cells
+# mean if interested in total contribution of a gene and know expression isn't skewed
+# however, all nodes are same colour across clusters if use median, use mean initially
+
+
+gene_trees <- lapply(Hec_late, function(gene) {
+  clustree(seu,
+           prefix = "RNA_snn_res.",
+           layout = "sugiyama",
+           node_colour = gene, 
+           node_colour_aggr = "mean",
+           node_colour_layer = "counts.Gene Expression") + 
+    ggtitle(gene) +
+    #theme(legend.position = "none") +
+   scale_colour_viridis_c(name = paste0(gene, " expression"))#(option = "plasma")
+}) 
+  
+
+```
+
+
+```{r,fig.height=8}
+#pca5 <- wrap_plots(gene_trees, ncol = 1)
+#pca5
+
+for (p in gene_trees) {
+  print(p)
+  cat("\n\n")
+}
+
+```
+
+Sox17 in art and pre art. However Gkn3 only in mature, i dont need that much detail rn but i just want to see how much detail we might need later
+
+```{r}
+art_trees <- lapply(c("Sox17", "Gkn3"), function(gene) {
+  clustree(seu,
+           prefix = "RNA_snn_res.",
+           layout = "sugiyama",
+           node_colour = gene, 
+           node_colour_aggr = "mean",
+           node_colour_layer = "counts.Gene Expression") + 
+    ggtitle(gene) +
+    #theme(legend.position = "none") +
+   scale_colour_viridis_c(name = paste0(gene, " expression"))#(option = "plasma")
+})
+```
+
+
+```{r,fig.height=8}
+#pca5 <- wrap_plots(gene_trees, ncol = 1)
+#pca5
+
+for (p in art_trees) {
+  print(p)
+  cat("\n\n")
+}
+
+```
+
+
+I think for initial clust to remove the clusters of unwanted cells 0.6 is good enough
+
+```{r}
+seu <- Seurat::SetIdent(seu, value = seu$RNA_snn_res.0.6)
+```
+I wanted to see if the UMAPs bu some bizzare chance end up looking the same. Is art the small one? Nope but interesting...
+
+```{r}
+Seurat::FeaturePlot(seu, "Sox17")
+```
+```{r}
+
+```
+
+
+```{r}
+res_list <- c("RNA_snn_res.0.6", "RNA_snn_res.0.8", "RNA_snn_res.1.1")
+  # <- change this to any gene you want
+
+plots <- lapply(res_list, function(res) {
+  Idents(seu) <- res
+  FeaturePlot(seu, features = Hec_late) + ggtitle(paste("Resolution:", res))
+})
+
+patchwork::wrap_plots(plots, ncol = 1)   # stacked vertically
+
+```
+
