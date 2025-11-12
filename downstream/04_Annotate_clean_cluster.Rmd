@@ -62,27 +62,77 @@ seu <- FindNeighbors(seu, dims = 1:35, reduction = "pca")
 Find variable features in the subset using the RNA assay
 
 ```{r}
-DefaultAssay(seu)
+DefaultAssay(seu) <- "RNA"
 seu <- FindVariableFeatures(seu, nfeatures=3000)
+```
+
+```{r,fig.width=6}
+top10 <- head(VariableFeatures(seu), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(seu)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot2
+#plot1 +plot2
 ```
 
 Run ScaleData on the integrate assay on the new set of variable features
 
-```{r}
+An improvement from next time would be to just not work on the PCA integration since we dgaf about time.
 
+```{r}
+DefaultAssay(seu) <- "mnn.reconstructed"
 ```
 
+Before I finish, want to set cellcycle scores just in case
+
+```{r}
+
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=T) #set in the meta.data col phase
+
+head(seu[[]])
+```
+
+Finally we scale
+
+```{r}
+seu <- ScaleData(seu, assay = "mnn.reconstructed", verbose = T)
+```
 
 Run PCA on the integrated assay using the new set of variable features
+
+
+```{r}
+seu <- RunPCA(seu,
+              reduction.name = "integrated_bec_pca", 
+              assay = "mnn.reconstructed",
+              features = VariableFeatures(seu),
+              verbose = T)
+```
+```{r}
+ElbowPlot(seu, ndims=50)
+```
+
+```{r}
+seu@reductions
+```
+
 Run FindNeighbors and FindClusters using the new PC dimensions
 
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated_bec_pca", dims = 1:35)
+```
 
 
 ```{r}
 seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn.clusters.bec")
 ```
+
+
 ```{r}
-seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.bec")
+seu <- RunUMAP(seu, reduction = "integrated_bec_pca", dims = 1:35, reduction.name = "umap.bec")
 ```
 ```{r}
 head(seu@meta.data)
@@ -90,7 +140,7 @@ head(seu@meta.data)
 
 
 ```{r,fig.width=10,fig.height=5}
-DimPlot(seu, reduction = 'umap.bec', group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu, reduction = 'umap.bec', group.by = 'genotype')
+DimPlot(seu, reduction = 'umap.bec', group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu, reduction = 'umap.bec', group.by = 'genotype') + ggtitle("")
 
 #condition|clusters
 ```
