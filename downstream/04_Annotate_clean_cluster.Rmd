@@ -1,0 +1,105 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+library(gprofiler2)
+# Set the random number seed
+set.seed(1234)
+```
+
+
+Now we will first look at the structure of the dataset, recluster and map and then annotate and get that side by side plot and then DE.
+
+```{r}
+seu <- readRDS("seu_res0.3_nonBEC_removed.rds")
+```
+
+```{r}
+#first look at the number of cells
+table(seu$orig.ident)
+```
+
+```{r}
+seu
+```
+https://www.biostars.org/p/9585385/
+https://github.com/satijalab/seurat/issues/5532
+
+
+
+note that if you wish to perform additional rounds of clustering after subsetting we recommend
+re-running FindVariableFeatures() and ScaleData()
+
+seu <- FindVariableFeatures(seu, nfeatures=3000)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu)
+seu <- FindNeighbors(seu, dims = 1:35, reduction = "pca")
+
+
+Find variable features in the subset using the RNA assay
+
+```{r}
+DefaultAssay(seu)
+seu <- FindVariableFeatures(seu, nfeatures=3000)
+```
+
+Run ScaleData on the integrate assay on the new set of variable features
+
+```{r}
+
+```
+
+
+Run PCA on the integrated assay using the new set of variable features
+Run FindNeighbors and FindClusters using the new PC dimensions
+
+
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn.clusters.bec")
+```
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.bec")
+```
+```{r}
+head(seu@meta.data)
+```
+
+
+```{r,fig.width=10,fig.height=5}
+DimPlot(seu, reduction = 'umap.bec', group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu, reduction = 'umap.bec', group.by = 'genotype')
+
+#condition|clusters
+```
+
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+merged <- CellCycleScoring(object=merged, s.features=s.genes, g2m.features=g2m.genes, set.ident=FALSE)
+
+head(merged[[]])
+```
+
