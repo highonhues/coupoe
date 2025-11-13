@@ -1,3 +1,3 @@
 id,name,read,pattern,sequence,feature_type
 HT6,PP2_RBPJKO_HT6_cre_neg_TotalSeq_A0306,R2,^(BC),TATGCTGCCACGGTA,Antibody Capture
-HT5,PP2_RBPJKO_HT5_cre_pos_TotalSeq_A0305,R2,^(BC),CTTTGTCTTTGTGAG,Antibody Capture
+HT7,PP2_RBPJKO_HT7_cre_pos_TotalSeq_A0307,R2,^(BC),GAGTCTGCCAGTATC,Antibody Capture

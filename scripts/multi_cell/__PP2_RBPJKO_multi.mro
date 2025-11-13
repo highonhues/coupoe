@@ -1,0 +1,28 @@
+# [gene-expression]
+# reference,/scratch/home/agupta1/coup/data/ref_mm10/refdata-gex-mm10-2020-A
+# create-bam,true
+# 
+# [feature]
+# reference,/scratch/home/agupta1/coup/scripts/multi_cell/feature.csv
+# 
+# [libraries]
+# fastq_id,fastqs,feature_types
+# PP2_RBPJKO,/scratch/home/agupta1/coup/data/RBPJKO_PP2/,Gene Expression
+# PP2_RBPJKO_HTO,/scratch/home/agupta1/coup/data/RBPJKO_PP2/,Antibody Capture
+# 
+# [samples]
+# sample_id,hashtag_ids
+# PP2_RBPJKO_HT6_cre_neg,HT6
+# PP2_RBPJKO_HT7_cre_pos,HT7
+@include "rna/sc_multi_cs.mro"
+
+call SC_MULTI_CS(
+    sample_id    = "PP2_RBPJKO_multi",
+    sample_desc  = "",
+    config       = {
+        bytes: null,
+        file:  "/scratch/home/agupta1/coup/scripts/multi_cell/multiconfig.csv",
+    },
+    config_hash  = "7bdd4a354dfe8c7ad838fc7e94446309b00e7633e72393f936c9a1ca16a34003",
+    no_preflight = false,
+)
