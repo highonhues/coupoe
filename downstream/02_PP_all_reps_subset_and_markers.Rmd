@@ -1,0 +1,108 @@
+---
+title: "02_PP_all_reps_subset_and_markers"
+author: "Ananya Gupta"
+date: "2025-11-14"
+output: html_document
+---
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+
+#for parallelization
+options(future.globals.maxSize = 3000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
+)
+```{r}
+# Load it back
+#seu <- readRDS("seu_int.rds")
+seu <- readRDS(file = file.path(rds_dir,"seu_pp_int.rds"))
+```
+
+
+```{r}
+ggplot(seu@meta.data) +
+    geom_bar(aes(x=orig.ident, fill=condition),
+             stat="count", color="black") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
+    labs(x="Sample name", y="Number of cells")
+
+```
+
+```{r}
+p <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(p, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+
+```
+
+Lets try to find markers using the annotations way
+
+```{r}
+annotations <- read.csv("mouse_annotation.csv")
+```
+
+```{r}
+
+```
+
