@@ -1,0 +1,83 @@
+---
+title: "PP_2KO_part1"
+author: "Ananya Gupta"
+date: "2025-11-13"
+output: html_document
+---
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+# Set the random number seed
+set.seed(1234)
+```
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+```{r}
+samples_df <- read.csv("samples_pp_only.csv",header=TRUE, stringsAsFactors = FALSE) #gsub works on chr
+
+samples_df$SampleName <- gsub("_", "-", samples_df$SampleName)
+
+#fix path for windows
+samples_df$Path <- trimws(samples_df$Path) #white space
+samples_df$Path <-  normalizePath(samples_df$Path, winslash="/")#,mustWork = FALSE)
+
+
+#setnames(values,namestoset)
+datadirs <- setNames(samples_df[,4], samples_df[,1])
+
+
+print(samples_df)
+print(datadirs)
+```
+
+I will now create individual seurat object which I expect to see for the conditions/genotype =OE,WT,KO
+
+In which we have 3 wt, 2ko and 2oe
+
+We will integrate them based on sample?Or genotype?
+Parse bio dataset was sample but I think u can do sondn too
