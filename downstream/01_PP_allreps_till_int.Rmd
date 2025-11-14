@@ -404,8 +404,13 @@ head(Idents(seu))
 ```{r}
 
 # Save your Seurat object
-saveRDS(seu, file = "seu_pp_int.rds")
+#saveRDS(seu, file = "seu_pp_int.rds")
 
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int.rds")
+)
 # Load it back
 #seu <- readRDS("seu_int.rds")
 ```
