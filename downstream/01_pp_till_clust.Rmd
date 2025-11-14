@@ -230,7 +230,7 @@ https://github.com/satijalab/seurat/issues/9792
 
 
 ```{r}
-#obj <- RunAzimuth(obj, reference = "C:\\Users\\Ananya\\Desktop\\SJSU\\CS 297\\hpc outputs\\Cellranger\\Pansci_ref")
+#obj <- RunAzimuth(obj, reference = "ref")
 seu <- FindVariableFeatures(seu, nfeatures=3000)
 seu <- ScaleData(seu)
 seu <- RunPCA(seu)
