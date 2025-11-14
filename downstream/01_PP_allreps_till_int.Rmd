@@ -17,6 +17,7 @@ library(batchelor)
 library(patchwork)
 library(Azimuth)
 library(plotly)
+library(gprofiler2)
 library(hdf5r)
 library(kableExtra)
 library(ggplot2)
@@ -33,6 +34,12 @@ library(ggrepel)
 library(gprofiler2)
 library(multtest)
 library(metap)
+
+#for parallelization
+options(future.globals.maxSize = 3000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
 # Set the random number seed
 set.seed(1234)
 ```
@@ -55,6 +62,12 @@ dir.create(fig_dir, showWarnings = FALSE)
   width = 6,
   height = 5,
   dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
 )
 
 ```{r}
@@ -80,4 +93,324 @@ I will now create individual seurat object which I expect to see for the conditi
 In which we have 3 wt, 2ko and 2oe
 
 We will integrate them based on sample?Or genotype?
-Parse bio dataset was sample but I think u can do sondn too
+Parse bio dataset was sample but I think u can do sondn too. Always do sample! https://www.biostars.org/p/9577962/
+
+```{r}
+seurat_list <- list()
+
+for(i in 1:nrow(samples_df)) {
+  sample_name <- samples_df$SampleName[i] #file names
+  sample_group <- samples_df$SampleGroup[i] #genotype
+  data_path <- samples_df$Path[i]
+  
+  cat("Processing:", sample_name, "\n")
+  
+  data <- Read10X(data.dir = data_path)
+  
+  #HTO data is multi output so it will be a list
+  if(is.list(data)) {
+    # For Cell Ranger multi output, extract only Gene Expression
+    gene_exp <- data$`Gene Expression`
+    cat("  - Multi output detected, using Gene Expression only\n")
+  } else {
+    # Regular output
+    gene_exp <- data
+    cat("  - Regular output\n")
+  }
+  
+  # Create Seurat object
+  seurat_obj <- CreateSeuratObject(
+    counts = gene_exp,
+    project = sample_name,
+    min.cells = 3,
+    min.features = 100
+  )
+  
+  #metadata
+  #seurat_obj$SampleName <- sample_name
+  seurat_obj$genotype <- sample_group
+  seurat_obj$site <- samples_df$Tissue[i]
+  seurat_obj$condition <- samples_df$Condition[i]
+  
+  #qc
+  seurat_obj$percent.mt <- PercentageFeatureSet(seurat_obj, pattern = "^mt-")
+
+  
+  # Store in list
+  seurat_list[[sample_name]] <- seurat_obj
+}
+
+```
+
+8 samples, 2KO,3WT, 3OE
+```{r}
+# look if it looks fine
+head(seurat_list[[5]]@meta.data)
+```
+
+
+```{r}
+# Merge all objects into one Seurat object
+seu <- merge(
+  x = seurat_list[[1]],
+  y = seurat_list[2:length(seurat_list)],
+  add.cell.ids = names(seurat_list),
+  project = "PP_All_Reps",merge.data = TRUE
+)
+```
+
+```{r}
+print(Layers(seu))
+seu
+```
+
+```{r}
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_just_merged.rds")
+)
+```
+
+
+```{r}
+#Features above 6000 might be doublets ngl no but hevs have v high transcription
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+  #+ ggtitle("QC: UMIs vs Genes")
+```
+
+
+
+```{r,fig.width=12}
+df <- seu@meta.data
+df$sum <- seu$nCount_RNA
+df$detected <- seu$nFeature_RNA
+
+
+ggplot(df, aes(x = sum, y = detected)) +
+  geom_point(aes(colour = percent.mt > 10), alpha = 0.7, size = 1) +
+  facet_wrap(vars(genotype)) +
+  scale_color_manual(
+    values = c("FALSE" = "coral", "TRUE" = "turquoise3"),
+    labels = c("FALSE" = "≤10%", "TRUE" = ">10%")
+  ) +
+  labs(
+    title = "QC: Detected genes vs total counts per Peyer's Patches Sample",
+    x = "Total counts per cell",
+    y = "Detected genes per cell",
+    colour = "Mitochondrial %"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    strip.text = element_text(face = "bold")
+  )
+
+```
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+              pt.size = 0,
+              ncol = 3) #+ ggtitle("Before QC")
+
+```
+
+```{r}
+#seu$orig.ident #sample name hai
+```
+
+```{r}
+#cleaning
+seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10)
+```
+
+
+```{r}
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_merged_mt_clean.rds")
+)
+```
+
+```{r}
+seu <- readRDS(file = file.path(rds_dir,"seu_pp_merged_mt_clean.rds"))
+```
+
+
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+              pt.size = 0,
+              ncol = 3) #+ ggtitle("After QC")
+
+# Visualize QC metrics as a violin plot
+# VlnPlot(coupko_clean, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+
+```
+
+Workflow to integrate
+
+```{r}
+seu <- NormalizeData(seu) #normalization.method = "LogNormalize",scale.factor = 10000
+```
+
+```{r}
+#find 3000 var genes
+seu <- FindVariableFeatures(seu, nfeatures = 3000)
+                               #selection.method = "vst",
+                               
+```
+Let us scale after int
+
+as the results of this procedure are stored in the scaled data slot (therefore overwriting the output of ScaleData()) hence you can scale first look at plots and then regress out cell cycle effects
+
+```{r}
+seu <- ScaleData(seu) # Default is variable features that are getting scaled
+```
+
+
+https://satijalab.org/seurat/articles/cell_cycle_vignette
+Regressed out pre integration ?
+But https://github.com/satijalab/seurat/issues/1393 I think use it to look at it
+
+can also set the identity of the Seurat object to the cell-cycle phase by passing set.ident = TRUE (the original identities are stored as old.ident).
+restore by Idents(marrow) <- "old.ident" or any metadat col
+```{r}
+#Idents(seu) again sample name hai
+```
+
+
+Well htis just wont work here so i guess you gotta do this post cell subset?
+
+DO NOT DO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=T) #set in the meta.data col phase
+```
+
+Even before normal PCA I want to see if there are cell cycle effects.
+DimPlot reduction: Which dimensionality reduction to use. If not specified, first searches for umap, then tsne, then pca
+```{r}
+# Running a PCA on cell cycle genes reveals, unsurprisingly, that cells separate entirely by
+# phase
+seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.before", reduction.key="CC_PC_B")
+
+```
+
+```{r}
+DimPlot(seu, reduction="pca.cellcycle") #before
+
+```
+
+
+```{r}
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
+
+```
+
+```{r}
+seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.after", reduction.key="CC_PC")
+#just to viz
+DimPlot(seu, reduction="pca.cellcycle") #before
+
+```
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+This PCA is for int haha
+```{r}
+
+#marrow <- RunPCA(marrow, features = VariableFeatures(marrow), ndims.print = 6:10, nfeatures.print = 10)
+#will be run using the variable features for the Assay. Note that the features must be present in the scaled data. Any requested features that are not scaled or have 0 variance will be dropped, and the PCA will be run using the remaining features.
+
+#so run on scaled data
+
+seu <- RunPCA(seu)
+```
+
+What if we just run it on the features?
+Integration
+
+```{r Integration}
+#check idents
+#Idents(seu)
+
+# Check how many cells per batch
+table(seu$orig.ident)
+
+# Check if PCA has embeddings for all cells
+ncol(seu)  # Total cells
+
+```
+
+```{r}
+?FastMNNIntegration
+```
+
+
+```{r}
+#seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, features=3000, new.reduction = "integrated.mnn",verbose = TRUE)
+
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, orig.reduction  = "pca", new.reduction = "integrated.mnn",verbose = TRUE)
+
+
+#
+```
+
+```{r}
+head(seu[["integrated.mnn"]])
+```
+
+```{r}
+seu <- JoinLayers(seu)
+```
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
+
+```
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+https://htmlpreview.github.io/?https://github.com/satijalab/seurat.wrappers/blob/master/docs/fast_mnn.html
+
+```{r,fig.height=12,fig.width=8}
+DimPlot(seu, reduction = "umap.mnn", group.by = c("orig.ident", "condition", "genotype"), ,ncol=1)
+```
+
+```{r,fig.width=10,fig.height=5}
+DimPlot(seu, reduction = "umap.mnn", split.by = "condition")
+```
+
+```{r}
+head(Idents(seu))
+```
+
+
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_pp_int.rds")
+
+# Load it back
+#seu <- readRDS("seu_int.rds")
+```
+
+
+
+```{r}
+
