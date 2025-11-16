@@ -279,44 +279,10 @@ restore by Idents(marrow) <- "old.ident" or any metadat col
 ```
 
 
-Well htis just wont work here so i guess you gotta do this post cell subset?
+Well cell cycle remova; just wont work here so i guess you gotta do this post cell subset? No post int joining
 
-DO NOT DO THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-```{r}
-s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-
-seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=T) #set in the meta.data col phase
-```
-
-Even before normal PCA I want to see if there are cell cycle effects.
 DimPlot reduction: Which dimensionality reduction to use. If not specified, first searches for umap, then tsne, then pca
-```{r}
-# Running a PCA on cell cycle genes reveals, unsurprisingly, that cells separate entirely by
-# phase
-seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.before", reduction.key="CC_PC_B")
-
-```
-
-```{r}
-DimPlot(seu, reduction="pca.cellcycle") #before
-
-```
-
-
-```{r}
-seu$CC.Difference <- seu$S.Score - seu$G2M.Score
-seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
-
-```
-
-```{r}
-seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.after", reduction.key="CC_PC")
-#just to viz
-DimPlot(seu, reduction="pca.cellcycle") #before
-
-```
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -367,6 +333,93 @@ head(seu[["integrated.mnn"]])
 ```{r}
 seu <- JoinLayers(seu)
 ```
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int_joined_layers.rds")
+)
+# Load it back
+#seu <- readRDS("seu_pp_joined_layers.rds")
+```
+
+note that if you wish to perform additional rounds of clustering after subsetting we recommend
+re-running FindVariableFeatures() and ScaleData()
+
+Fisr calculate score
+
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+
+```
+
+```{r}
+#PCA on CC before anything kind of regression out
+# Running a PCA on cell cycle genes reveals, unsurprisingly, that cells separate entirely by
+seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.before", reduction.key="CC_B_")
+
+```
+
+```{r}
+#Viewing the pca where theres no cell cycle correction
+DimPlot(seu, reduction="pca.cellcycle.before",group.by = "Phase") +ggtitle("Before Cell cycle fixing") +
+  theme(plot.title = element_text(hjust = 0.5))#before
+
+```
+
+```{r}
+#now want to view what happens when you scale for the cell cycle scores in general
+
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = c("S.Score", "G2M.Score"))
+seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.score", reduction.key="CC_S_")
+
+```
+
+```{r}
+DimPlot(seu, reduction="pca.cellcycle.score", group.by = "Phase") +ggtitle("Cell cycle fixing by Score") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+Looks like cell cycle effects are not getting removed????? UMMMMMMMM maybe diff will help yk
+
+```{r}
+#Correcting by cc diff and viewing its effect
+#This will rewrite the scale data
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = "CC.Difference")
+seu <- RunPCA(seu, features = c(s.genes, g2m.genes), reduction.name="pca.cellcycle.diff", reduction.key="CC_D_")
+
+```
+
+```{r}
+
+#just to viz what happens after you correct for ccdiff
+DimPlot(seu, reduction="pca.cellcycle.diff",group.by = "Phase") +ggtitle("Cell cycle fixing by Difference") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+IT IS NOT GETTING REMOVED AFF PLS
+Okay before any big moves lets do that Cell cycle viewing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r}
 seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
