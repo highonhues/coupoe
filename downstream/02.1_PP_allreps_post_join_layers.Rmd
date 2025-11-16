@@ -3,16 +3,347 @@ title: "R Notebook"
 output: 02.1_PP_allreps_post_join_layers
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+library(future)
+plan(multicore, workers = 8)
 
-```{r}
-plot(cars)
+
+#for parallelization
+options(future.globals.maxSize = 3000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
+)
+
+So I want to describe where I'm at and where I want to go. So I'm gonna load in the dataset just after integration and direct joining, without umap and clusters. I did calculate and save the cell cycle score phases but I am just not seeing it get removed as I saw in 01 analysis. I did not save CC.Diff though so if you need it you might have to save it.
+
+https://github.com/satijalab/seurat/discussions/4187 this tells to regress out cell cycle after int didnt work. Also just in case fastMnn does its own pca and stuff which is why doesnt matter what previous PCA you did it usually doesnt have an effect as in the reduction doesnt get used https://github.com/satijalab/seurat/discussions/10083 so I believe there is value in doing the HVF again and then maybe trying to regress out cell cycle https://github.com/satijalab/seurat/issues/1500#issuecomment-491336242. Since the FastMNN uses features=2000 by default https://rdrr.io/github/satijalab/seurat-wrappers/man/FastMNNIntegration.html I wanna run it with j features and no reduction with n number and 3000 given to see if analysis changes a little. I iwll do that here first because I dont want to make things messy.
+
+```{r}
+seu <- readRDS(file = file.path(rds_dir,"seu_pp_merged_mt_clean.rds"))
+```
+
+Following the general pathway..
+```{r}
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu, nfeatures = 3000,verbose=F)
+seu <- ScaleData(seu, verbose=F)
+seu <- RunPCA(seu)
+```
+
+...and saving it pls...
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_gen_pca.rds"))
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_gen_pca.rds"))
+```
+
+
+...and then integrating without the orig reduction.. how does it look?
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, new.reduction = "integrated.mnn",verbose = TRUE)
+#orig.reduction  = "pca"
+
+seu <- JoinLayers(seu)
+
+#we would technically have scale and pca here
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
+```
+
+```{r}
+# View resuts
+p1 <- DimPlot(seu, group.by="seurat_clusters") 
+LabelClusters(p1, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0) + ggtitle("Integration without Orig Reduction") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int_wo_origred.rds"))
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_int_wo_origred.rds"))
+```
+
+```{r}
+rm(seu)
+```
+
+```{r}
+  
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_gen_pca.rds"))
+
+```
+yeah so theres no diff cause the orig reduction was bs.Moving on
+
+Then we check with features =3000 how are they looking? 
+
+Here I first tried to use features=3000 with the FastMNN but thats not working as it needs a vector so we will use HVF
+```{r}
+length(VariableFeatures(seu))
+
+```
+
+```{r}
+#hvf3k <- 
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,features=VariableFeatures(seu), new.reduction = "integrated.mnn",verbose = TRUE)
+#orig.reduction  = "pca"
+
+seu <- JoinLayers(seu)
+
+#we would technically have scale and pca here
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
+```
+
+```{r}
+# View resuts
+p2 <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(p2, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0) + ggtitle("Integration with 3000 Features") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int_w_3k.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_int_wo_origred.rds"))
+```
+
+That looks flipped and different. Let us explore a little
+
+
+```{r}
+#Contaminants
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
+
+# cell markers
+
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
+CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
+PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
+CapEC_marker <- c("Cdh13", "Emcn", "Gja1", "Gpihbp1", "Ly6a", "Ly6c1", "Podxl", "Ramp3")
+CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund", "Nfkbia", "Nr4a1", "Sgk1") #this overlaps w a lot of others and the capec1 too
+CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
+art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
+
+
+
+```
+
+
+```{r,fig.width=8,fig.height=9}
+FeaturePlot(seu,PCV_markers,label=T)
+```
+```{r,fig.height=10, fig.width=9}
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+FeaturePlot(seu, features=hev_markers, reduction= "umap.mnn")#+ ggtitle("Viewing HEC Markers") +
+  #theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r,fig.width=7,fig.height=8}
+FeaturePlot(seu,lec,label=T) #
+FeaturePlot(seu,lymphocytes,label=T,ncol=1) 
+FeaturePlot(seu,fib_ret,label=T) 
+```
+
+```{r}
+rm(seu)
+```
+
+Okay so we have decided to use the 3k bec its clustering lecs tgt so prolly doing a better job. I will now restart from the integration snce we finished the comparitive analysis. We will integrate, join then calculate cell cycle scores and then i guess regress out the ccdiff stuff in scale. Reso pca and then keep proceeding with more downstream stuff.
+
+https://github.com/mxiang1/scRNAseq-analysis/blob/main/CD8_module_scores.R
+
+
+```{r}
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_gen_pca.rds"))
+
+```
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,features=VariableFeatures(seu), new.reduction = "integrated.mnn",verbose = TRUE)
+#orig.reduction  = "pca"
+
+seu <- JoinLayers(seu)
+
+```
+```{r}
+seu
+```
+
+Calculate cell cycle scores and look at it
+
+```{r}
+table(seu$orig.ident)
+```
+
+```{r}
+Assays(seu)
+head(seu@meta.data)
+```
+```{r}
+seu[["RNA"]]
+
+```
+
+```{r}
+seu[["mnn.reconstructed"]]
+
+```
+```{r}
+# https://github.com/FrancisCrickInstitute/snRNAseq_workflow/blob/dabf3d87226ef9e9d51b12689c05a515cd1f0abc/templates/integrating_mnn.rmd
+DefaultAssay(seu) <- "mnn.reconstructed"
+```
+
+
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+
+```
+
+```{r}
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
+#seu <- RunPCA(seu, verbose = FALSE)
+seu <- Seurat::RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+```
+That took scaling took forever to run im saving
+https://github.com/icbi-lab/crc-atlas/blob/82c15ecc2ea36baa0c4cffe8818bf58e21dcfc48/analyses/50_Mouse_neutrophils_scRNAseq_analysis/3.1.Annotation_and_extraction_of_neutrophils.R
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_3k_mnn_pca.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_3k_mnn_pca.rds"))
+```
+
+
+```{r}
+
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_3k_mnn_pca.rds"))
+```
+
+```{r}
+Reductions(seu)
+```
+
+
+```{r}
+ElbowPlot(seu, ndims=50)
+```
+
+That elbowplot makes it look like I should use everything but if we focus and look for the elbow, thats the one at 25 ish.
+
+
+```{r}
+
+#seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+#Taking from menglan
+seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+
+```
+```{r}
+names(seu@graphs)
+
+```
+
+I ran umap before the FindClusters!!!!
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters") #the custom name doesnt work for some reason 
+
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
+```
+
