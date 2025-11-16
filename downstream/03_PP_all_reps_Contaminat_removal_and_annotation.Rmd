@@ -1,0 +1,153 @@
+---
+title: "R Notebook"
+output: 03_PP_all_reps_Contaminat_removal_and_annotation
+---
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+library(future)
+plan(multicore, workers = 8)
+
+
+#for parallelization
+options(future.globals.maxSize = 3000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
+)
+
+
+```{r}
+
+#Contaminants
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
+
+# cell markers
+
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
+CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
+PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
+CapEC_marker <- c("Cdh13", "Emcn", "Gja1", "Gpihbp1", "Ly6a", "Ly6c1", "Podxl", "Ramp3")
+CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund", "Nfkbia", "Nr4a1", "Sgk1") #this overlaps w a lot of others and the capec1 too
+CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
+art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
+
+
+
+```
+
+```{r}
+
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_int_fin.rds"))
+```
+
+
+```{r}
+modules <- list(
+  LEC = lec,
+  Lymphocyte = lymphocytes,
+  FRC = fib_ret
+)
+
+```
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+seu <- AddModuleScore(seu, features = modules)
+
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+```{r}
+grep("^Cluster", colnames(seu@meta.data), value = TRUE)
+
+```
+```{r}
+#Rename
+old <- c("Cluster1", "Cluster2", "Cluster3")
+new <- c("LEC", "Lymphocyte", "FRC")
+
+colnames(seu@meta.data)[match(old, colnames(seu@meta.data))] <- new
+
+```
+
+```{r}
+head(seu@meta.data)
+```
+
+```{r}
+Reductions(seu)
+```
+
+
+```{r,fig.height=7,fig.width=8}
+FeaturePlot(seu, features = c("LEC", "Lymphocyte", "FRC"),label=T,
+            #cols = c("lightgrey", "red"),  # optional: nice contrast
+            reduction = "umap.mnn")
+
+```
+
