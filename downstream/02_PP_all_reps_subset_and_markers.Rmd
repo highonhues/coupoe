@@ -91,6 +91,87 @@ p <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
 LabelClusters(p, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
 ```
 
+Okay so these many clusters aree too much for me rn. We need 7-8 sow e will try again.Ill make it into a new object since I get bothered when its the same one.
+
+
+```{r}
+seu_obj <- FindClusters(seu, resolution = seq(0.1, 0.4, by=0.1))
+```
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+Let's try with 0.2 and see if I am into that.How? Well we should first have a marker list, derived from https://www.nature.com/articles/s41467-020-17291-5#Sec2
+We will remove contaminats too which are also imp so I will include that as well for now.
+
+Clusters extending to the termini of the arterial, CRP, and HEV branches were further separated to distinguish cells that were most distinct (distant along trajectories) from the bulk of EC (darker shading, Fig. 1e): these cells are enriched for genes associated with mature arterial (e.g., Gkn3, Bmx) or HEV (Chst4, Glycam1) differentiation, or in the case of CRP, for genes associated with endothelial specification during early development or with stem cells (e.g., Ets2, Cxcr4, Nes) 
+
+```{r}
+#Contaminants
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
+
+# cell markers
+
+art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
+CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
+PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
+CapEC_marker <- c("Cdh13", "Emcn", "Gja1", "Gpihbp1", "Ly6a", "Ly6c1", "Podxl", "Ramp3")
+CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund", "Nfkbia", "Nr4a1", "Sgk1") #this overlaps w a lot of others and the capec1 too
+CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
+art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
+
+
+
+```
+
+
+For 0.2 analysis
+```{r}
+seu_obj <- SetIdent(seu_obj, value = seu_obj$RNA_snn_res.0.2)
+```
+
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),ncol=1, label=T)
+```
+
+
+```{r}
+p_0.2 <- DimPlot(seu_obj, group.by="RNA_snn_res.0.2") #+ NoLegend()
+LabelClusters(p_0.2, id = "RNA_snn_res.0.2",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+FeaturePlot(seu_obj,lec,label=T) #3 and 4
+FeaturePlot(seu_obj,lymphocytes,label=T) #clust 9
+FeaturePlot(seu_obj,fib_ret,label=T) #3 and 4
+```
+
+```{r,fig.height=8,fig.width=8}
+FeaturePlot(seu_obj,art_markers,label=T)
+FeaturePlot(seu_obj,CapEC1_marker,label=T)
+```
+```{r,fig.width=8,fig.height=9}
+FeaturePlot(seu_obj,PCV_markers,label=T)
+```
+So from what I'm seeing 0.3 might be the best oen and we def cant take out clusters, only cells as im seeing clear HEC division in 0.3 unlike 0.2. and clusters have mult cells of inetrest so we will have to take them out.
+
+
+
+
+
+
+
+
+
+
 ```{r}
 DefaultAssay(seu) <- "RNA"
 
@@ -99,10 +180,222 @@ DefaultAssay(seu) <- "RNA"
 Lets try to find markers using the annotations way
 
 ```{r}
-annotations <- read.csv("mouse_annotation.csv")
+annotations <- read.csv("mouse_annotations.csv")
 ```
 
 ```{r}
+head(annotations)
+```
+```{r}
+head(seu@meta.data)
+```
 
+
+```{r}
+get_conserved <- function(cluster){
+  FindConservedMarkers(seu,
+                       ident.1 = cluster,
+                       grouping.var = "condition",
+                       only.pos = TRUE) %>%
+    rownames_to_column(var = "gene") %>%
+    left_join(y = unique(annotations[, c("gene_name", "description")]),
+               by = c("gene" = "gene_name")) %>%
+    cbind(cluster_id = cluster, .)
+  }
+```
+
+```{r}
+#map_dfr(inputs_to_function, name_of_function)
+levels(Idents(seu))
+clusters_to_use <- levels(Idents(seu))
+conserved_markers <- map_dfr(clusters_to_use, get_conserved)
+```
+```{r}
+head(conserved_markers)
+```
+
+
+For now manually looking at the skipped clusters.Before that we evaluate
+
+```{r}
+top10_wt <- conserved_markers %>%
+  group_by(cluster_id) %>%
+  slice_max(order_by = WT_avg_log2FC, n = 10)
+
+```
+
+
+```{r}
+top10 <- conserved_markers %>% 
+  mutate(avg_fc = (WT_avg_log2FC + OE_avg_log2FC + KO_avg_log2FC) /3) %>% 
+  group_by(cluster_id) %>% 
+  top_n(n = 10, 
+        wt = avg_fc)
+
+# Visualize top 10 markers per cluster
+View(top10)
+```
+
+```{r}
+markers <- FindAllMarkers(object = seu, 
+                          only.pos = TRUE,
+                          logfc.threshold = 0.25)   
+```
+```{r}
+get_cluster_markers <- function(df, cl, top = 10) {
+  df %>%
+    filter(cluster == cl) %>%
+    arrange(desc(avg_log2FC)) %>%
+    head(top)
+}
+
+get_cluster_markers(markers, 8, top = 20
+                    )
+
+```
+
+
+```{r}
+#print(top10[top10$cluster_id == 1, "gene"])
+as.list(top10[top10$cluster_id == 4
+              , "gene"])
+
+
+```
+```{r}
+paste(top10[top10$cluster_id == 1, "gene"], collapse = ", ")
+
+```
+```{r}
+#save cluster 
+write.csv(top10, "output.csv", row.names = FALSE)
+
+
+```
+
+```{r}
+# Determine differentiating markers for CD4+ T cell
+cd4_tcells <- FindMarkers(seu,
+                          ident.1 = 2,
+                          ident.2 = c(0,4,6))                  
+
+# Add gene symbols to the DE table
+cd4_tcells <- cd4_tcells %>%
+  rownames_to_column(var = "gene") %>%
+  left_join(y = unique(annotations[, c("gene_name", "description")]),
+             by = c("gene" = "gene_name"))
+
+# Reorder columns and sort by padj      
+cd4_tcells <- cd4_tcells[, c(1, 3:5,2,6:7)]
+
+cd4_tcells <- cd4_tcells %>%
+  dplyr::arrange(p_val_adj) 
+
+# View data
+View(cd4_tcells)
+
+
+```
+
+
+
+```{r}
+genes <- c("Pgf", "Apln", "Hey1")
+FeaturePlot(seu, features = genes, label = T)
+```
+
+```{r}
+genes <- c("Chst4", "Ccl21a")
+FeaturePlot(seu, features = genes, label = T)
+```
+
+
+```{r}
+genes <- c("Selp", "Vcam1")
+FeaturePlot(seu, features = genes, label = T)
+```
+
+
+```{r}
+genes <- c("St6gal1")
+FeaturePlot(seu, features = genes, label = T)
+
+```
+```{r}
+genes <- c("Vwf", "Selp", "Ptn", "Ackr1")
+FeaturePlot(seu, features = genes, label = T)
+```
+
+```{r}
+#Art
+hec_core <- c("Glycam1", "Madcam1", "Chst4", "Fut7", "Ackr4")
+FeaturePlot(seu, features = hec_core)
+#
+```
+
+```{r}
+seu$celltype <- "Unknown"
+
+
+```
+```{r}
+seu$celltype[seu$seurat_clusters == 0] <- "CapEC"
+seu$celltype[seu$seurat_clusters == 3] <- "Art"
+seu$celltype[seu$seurat_clusters == 5] <- "HEC"
+seu$celltype[seu$seurat_clusters == 9] <- "Pericytes"
+seu$celltype[seu$seurat_clusters == 11] <- "LEC"
+seu$celltype[seu$seurat_clusters == 11] <- "LEC"
+
+```
+
+```{r}
+c <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(c, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+```{r}
+head(seu@meta.data)
+```
+```{r}
+seu$celltype_manual[seu$seurat_clusters == 0]  <- "CapEC"
+seu$celltype_manual[seu$seurat_clusters == 1]  <- "Art"
+seu$celltype_manual[seu$seurat_clusters == 4]  <- "PCV"
+seu$celltype_manual[seu$seurat_clusters == 5]  <- "HEC"
+seu$celltype_manual[seu$seurat_clusters == 8]  <- "Vn"
+seu$celltype_manual[seu$seurat_clusters == 9]  <- "Pericytes"
+seu$celltype_manual[seu$seurat_clusters == 11] <- "LEC"
+
+```
+
+
+```{r}
+seu <- RenameIdents(object = seu, 
+                               "0" = "CapEC",
+                               "1" = "Art",
+                               "2" = "X",
+                               "3" = "X",
+                               "4" = "PCV",
+                               "5" = "HEC",
+                               "6" = "X",
+                               "7" = "X",
+                               "8" = "Vn",
+                               "9" = "Pericytes",
+                               "10" = "X",
+                               "11" = "LEC",
+                               "12" = "X",
+                               "13" = "X")
+
+
+
+#Plot the UMAP
+DimPlot(object = seu,
+        reduction = "seurat_clusters",
+        label = TRUE,
+        label.size = 3,
+        repel = TRUE)
+```
+
+```{r}
+c <- DimPlot(seurat_integrated, group.by="seurat_clusters") + NoLegend()
+LabelClusters(c, id = "celltype",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
 ```
 
