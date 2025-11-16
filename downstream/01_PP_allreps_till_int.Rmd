@@ -315,8 +315,9 @@ ncol(seu)  # Total cells
 ```{r}
 ?FastMNNIntegration
 ```
+https://github.com/satijalab/seurat/discussions/10083
 
-
+FastMNN records its own pca dn not teh one thats being passed and hence is more resistant to batch eff and cell cycle ig so actually really truly dgaf to me i guess
 ```{r}
 #seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, features=3000, new.reduction = "integrated.mnn",verbose = TRUE)
 
@@ -344,10 +345,28 @@ saveRDS(
 #seu <- readRDS("seu_pp_joined_layers.rds")
 ```
 
+```{r}
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_int_joined_layers.rds"))
+
+
+```
+
+
 note that if you wish to perform additional rounds of clustering after subsetting we recommend
 re-running FindVariableFeatures() and ScaleData()
 
 Fisr calculate score
+
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
+```
+
 
 ```{r}
 s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
@@ -356,6 +375,42 @@ g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens",
 seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
 
 ```
+
+
+```{r}
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int_cc_calc.rds")
+)
+```
+
+
+Lookin at hev diagnostics
+
+```{r}
+#  clust 11 has only G2M iterestinggggg 0.3 res
+
+DimPlot(seu, reduction = "umap.mnn", group.by = "Phase") + ggtitle("Viewing Cell cycle Effects on Clusters") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+lowkey theres no cell cycle effect?? DEAD AFFF
+
+```{r}
+FeaturePlot(seu, features = c("S.Score", "G2M.Score"), reduction = "umap.mnn")
+FeaturePlot(seu, features = c("Mki67", "Ube2c", "Kif2c"), reduction = "umap.mnn")
+
+```
+```{r,fig.height=10, fig.width=9}
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+FeaturePlot(seu, features=hev_markers, reduction= "umap.mnn")#+ ggtitle("Viewing HEC Markers") +
+  #theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+
+
+
 
 ```{r}
 #PCA on CC before anything kind of regression out
@@ -403,7 +458,9 @@ DimPlot(seu, reduction="pca.cellcycle.diff",group.by = "Phase") +ggtitle("Cell c
   theme(plot.title = element_text(hjust = 0.5))
 
 ```
-IT IS NOT GETTING REMOVED AFF PLS
+IT IS NOT GETTING REMOVED AFF PLS she just moving around im dead af
+ Dgaf we just leave it in lowkey
+
 Okay before any big moves lets do that Cell cycle viewing
 
 
@@ -415,11 +472,10 @@ Okay before any big moves lets do that Cell cycle viewing
 
 
 
+!!! older stuff !!!
 
 
-
-
-
+Run this only if you didnt run the stuff above
 
 ```{r}
 seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)

@@ -72,9 +72,10 @@ saveRDS(
 ```{r}
 # Load it back
 #seu <- readRDS("seu_int.rds")
-seu <- readRDS(file = file.path(rds_dir,"seu_pp_int.rds"))
+seu <- readRDS(file = file.path(rds_dir,"seu_pp_int_cc_calc.rds"))
 ```
 
+you might have to do cc diff if you want it cause id idnt sve that
 
 ```{r}
 ggplot(seu@meta.data) +
@@ -120,6 +121,7 @@ fib_ret <- c("Pdpn","Ccl19","Pdgfra")
 
 # cell markers
 
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
 art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
 CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
 PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
@@ -148,10 +150,10 @@ p_0.2 <- DimPlot(seu_obj, group.by="RNA_snn_res.0.2") #+ NoLegend()
 LabelClusters(p_0.2, id = "RNA_snn_res.0.2",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
 ```
 
-```{r}
-FeaturePlot(seu_obj,lec,label=T) #3 and 4
-FeaturePlot(seu_obj,lymphocytes,label=T) #clust 9
-FeaturePlot(seu_obj,fib_ret,label=T) #3 and 4
+```{r,fig.width=7,fig.height=8}
+FeaturePlot(seu_obj,lec,label=T) #3 and 4  #in 0.3 its 2 n 3 respectively
+FeaturePlot(seu_obj,lymphocytes,label=T) #clust 9 #13 in 0.3
+FeaturePlot(seu_obj,fib_ret,label=T) #3 and 4  
 ```
 
 ```{r,fig.height=8,fig.width=8}
@@ -162,6 +164,9 @@ FeaturePlot(seu_obj,CapEC1_marker,label=T)
 FeaturePlot(seu_obj,PCV_markers,label=T)
 ```
 So from what I'm seeing 0.3 might be the best oen and we def cant take out clusters, only cells as im seeing clear HEC division in 0.3 unlike 0.2. and clusters have mult cells of inetrest so we will have to take them out.
+```{r}
+?IntegrateLayers
+```
 
 
 
