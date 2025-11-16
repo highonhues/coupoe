@@ -347,3 +347,44 @@ seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters") #the c
 seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
 ```
 
+```{r,fig.height=7,fig.width=7}
+# View resuts
+p2 <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(p2, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0) + ggtitle("Integration with 3000 Features") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+12 Clusters
+
+
+
+```{r, fig.height=6, fig.width=6}
+
+DimPlot(seu, grou = "umap.mnn", group.by = "Phase") + ggtitle("Viewing Cell cycle Effects on Clusters") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+levels(seu)
+head(seu@meta.data)
+```
+```{r}
+sum(seu$mnn_clusters == seu$seurat_clusters) #yuh for all 20333 cells its equal
+```
+
+
+```{r, fig.height=6, fig.width=12}
+
+DimPlot(seu, group.by="seurat_clusters", split.by = "condition") + ggtitle("Viewing Cells in each cluster Split By Condition") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int_fin.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_int_fin.rds"))
+```
+
+I want to now move on to filtering the contaminants. Add module score is able to avergage multiple genes. Lets do it in a new rmd,shall we?
