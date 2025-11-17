@@ -361,11 +361,10 @@ Fisr calculate score
 
 
 ```{r}
-#seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
-seu <- FindNeighbors(seu, reduction = "mnn.reconstructed", dims = 1:35) #or set default as that diabolical
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
 seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
-#seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
-seu <- RunUMAP(seu,  dims = 1:35, reduction.name = "umap.mnn") #i think it has been running on the pca all along
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
 ```
 
 
