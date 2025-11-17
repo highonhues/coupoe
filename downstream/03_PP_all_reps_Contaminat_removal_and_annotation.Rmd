@@ -37,7 +37,7 @@ plan(multicore, workers = 8)
 
 
 #for parallelization
-options(future.globals.maxSize = 3000 * 1024^2) 
+options(future.globals.maxSize = 8000 * 1024^2) 
 #options(future.globals.maxSize = 1e9) was abt 1GB
 
 
@@ -149,5 +149,218 @@ FeaturePlot(seu, features = c("LEC", "Lymphocyte", "FRC"),label=T,
             #cols = c("lightgrey", "red"),  # optional: nice contrast
             reduction = "umap.mnn")
 
+```
+```{r,fig.width=12,fig.height=5}
+VlnPlot(
+  seu,
+  features = c("LEC", "Lymphocyte", "FRC"),
+  group.by = "seurat_clusters",
+  pt.size = 0
+)
+
+```
+
+```{r}
+DotPlot(seu,
+  features = unique(c(lec, lymphocytes, fib_ret)),
+  group.by = "seurat_clusters"
+) + RotatedAxis() +  ggtitle("Contaminant Marker Expression Across Clusters") +
+  theme(plot.title = element_text(hjust = 0.7, size = 12, face = "bold"))
+
+
+```
+
+So some of the cells show mild expression. But when I had performed a feature plot it was mixing with other important clusters that i gaf about and i dont want to deal with that.
+```{r}
+table(seu$orig.ident)
+```
+
+```{r}
+modules <- c("LEC", "Lymphocyte", "FRC")
+thresholds <- c(0.01, 0.1, 0.1)   # example
+
+plot_list <- list()
+
+for (i in seq_along(modules)) {
+    feat <- modules[i]
+    thr <- thresholds[i]
+    
+    df <- data.frame(score = seu@meta.data[[feat]])
+    
+    p <- ggplot(df, aes(x = score)) +
+        geom_histogram(bins = 60, fill = "lightgrey", color = "black") +
+        geom_vline(xintercept = thr, color = "red", size = 1.2) +
+        ggtitle(paste0("Histogram of ", feat, " Score (Thr = ", thr, ")")) +
+        theme_bw() +
+        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+    
+    plot_list[[i]] <- p
+}
+
+
+wrap_plots(plot_list, ncol = 1)
+
+```
+
+Subset will keep cells where the condition specified is True.
+
+```{r}
+#keep cells that have a low score on these
+seu <- subset(
+  seu,
+  subset = (LEC < 0.01) & (Lymphocyte < 0.1) & (FRC < 0.1)
+)
+
+```
+
+```{r}
+table(seu$orig.ident)
+```
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_subset.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_subset.rds"))
+```
+
+
+
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_subset.rds"))
+```
+
+```{r}
+seu
+```
+An object of class Seurat 
+23109 features across 15222 samples within 2 assays 
+Active assay: RNA (20109 features, 3000 variable features)
+ 3 layers present: data, counts, scale.data
+ 1 other assay present: mnn.reconstructed
+ 3 dimensional reductions calculated: pca, integrated.mnn, umap.mnn
+
+
+Now I think we scale and clean again and recluster!
+
+https://github.com/tgen/banovichlab/blob/31704e559e9b098a82508d6bd04bb81aa799a263/ILD_eQTL/annotation.R#L61
+
+
+https://github.com/satijalab/seurat/issues/1883
+
+https://github.com/satijalab/seurat/issues/1883#issuecomment-546732787
+Running FindVariableGenes() and RunPCA() again on the integrated dataset does not seem helpful to me because the limited feature space of 3000 is not changed. The alternative would be to subset() the population of interest and run the complete preprocessing including integration only on those cells again. That enables to change the feature space. This paper https://www.cell.com/cell/fulltext/S0092-8674(19)30732-9?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0092867419307329%3Fshowall%3Dtrue
+
+Okay so inspso:
+https://github.com/icbi-lab/crc-atlas/blob/82c15ecc2ea36baa0c4cffe8818bf58e21dcfc48/analyses/50_Mouse_neutrophils_scRNAseq_analysis/4.2.Neutrophils_Progenitor_integration.R
+
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu, nfeatures = 3000)
+
+#cellcycle
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+#Correcting by cc diff and viewing its effect
+#This will rewrite the scale data
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = "CC.Difference")
+
+seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+
+```
+
+```{r}
+seu[["RNA"]] <- split(
+  seu[["RNA"]],
+  f = seu$orig.ident
+)
+
+```
+
+```{r}
+#batch=seu$orig.ident,
+seu <- IntegrateLayers(seu, method = FastMNNIntegration,
+                       features=VariableFeatures(seu),
+                       new.reduction = "integrated.mnn",
+                       verbose = TRUE)
+```
+```{r}
+seu <- JoinLayers(seu)
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
+```
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+```
+
+```{r}
+#Diagnostic Resolution
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
+
+```
+
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+```
+
+I will stick with 0.2!
+
+```{r}
+rm(seu_obj)
+```
+
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.2, cluster.name = "mnn_clusters")
+```
+```{r}
+# View resuts
+p2 <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(p2, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0) + ggtitle("Integration For Only BEC") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+DimPlot(seu, group.by= "condition", reduction="umap.mnn")
+```
+
+I'm worried for how little im seing of KO. Let's save this first.
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_subset_after_umap.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
 ```
 
