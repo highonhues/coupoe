@@ -448,12 +448,12 @@ DimPlot(seu, reduction = "umap.mnn", split.by = "condition")
 ```{r}
 
 # Save your Seurat object
-#saveRDS(seu, file = "seu_pp_int.rds")
+#saveRDS(seu, file = "seu_pp_int_fin.rds")
 
 
 saveRDS(
   object = seu,
-  file = file.path(rds_dir, "seu_pp_int.rds")
+  file = file.path(rds_dir, "seu_pp_int_fin.rds")
 )
 # Load it back
 #seu <- readRDS("seu_int.rds")
