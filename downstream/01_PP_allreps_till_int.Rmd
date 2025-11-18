@@ -90,7 +90,7 @@ print(datadirs)
 
 I will now create individual seurat object which I expect to see for the conditions/genotype =OE,WT,KO
 
-In which we have 3 wt, 2ko and 2oe
+In which we have 1 wt, 1ko and 3oe and 1 cre ctrl
 
 We will integrate them based on sample?Or genotype?
 Parse bio dataset was sample but I think u can do sondn too. Always do sample! https://www.biostars.org/p/9577962/
@@ -142,7 +142,7 @@ for(i in 1:nrow(samples_df)) {
 
 ```
 
-8 samples, 2KO,3WT, 3OE
+6 samples, 1KO,1WT, 2OE
 ```{r}
 # look if it looks fine
 head(seurat_list[[5]]@meta.data)
@@ -176,6 +176,10 @@ saveRDS(
 #Features above 6000 might be doublets ngl no but hevs have v high transcription
 FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
   #+ ggtitle("QC: UMIs vs Genes")
+```
+```{r}
+rm(seurat_list)
+rm(seurat_obj)
 ```
 
 
@@ -279,13 +283,6 @@ restore by Idents(marrow) <- "old.ident" or any metadat col
 ```
 
 
-Well cell cycle remova; just wont work here so i guess you gotta do this post cell subset? No post int joining
-
-
-DimPlot reduction: Which dimensionality reduction to use. If not specified, first searches for umap, then tsne, then pca
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 This PCA is for int haha
 ```{r}
 
@@ -317,11 +314,11 @@ ncol(seu)  # Total cells
 ```
 https://github.com/satijalab/seurat/discussions/10083
 
-FastMNN records its own pca dn not teh one thats being passed and hence is more resistant to batch eff and cell cycle ig so actually really truly dgaf to me i guess
+FastMNN records its own pca dn not teh one thats being passed and hence is more resistant to batch eff and cell cycle 
 ```{r}
 #seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, features=3000, new.reduction = "integrated.mnn",verbose = TRUE)
 
-seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, orig.reduction  = "pca", new.reduction = "integrated.mnn",verbose = TRUE)
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, new.reduction = "integrated.mnn",verbose = TRUE)
 
 
 #
@@ -356,25 +353,68 @@ seu <- readRDS(file.path(rds_dir, "seu_pp_int_joined_layers.rds"))
 note that if you wish to perform additional rounds of clustering after subsetting we recommend
 re-running FindVariableFeatures() and ScaleData()
 
-Fisr calculate score
-
+First lest do a diagnostic  resolution study
 
 
 ```{r}
-seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
-seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
-seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
-
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
+```
+```{r}
+#Diagnostic Resolution
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
 ```
 
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+
+
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+```
+0.2.
+
+```{r}
+#remove the object you dont need
+rm(seu_obj)
+```
+
+So now we do cell cycle, scale and then reductions
+
+```{r}
+# https://github.com/FrancisCrickInstitute/snRNAseq_workflow/blob/dabf3d87226ef9e9d51b12689c05a515cd1f0abc/templates/integrating_mnn.rmd
+DefaultAssay(seu) <- "mnn.reconstructed"
+```
 
 ```{r}
 s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
 g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-
+ 
 seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
-
 ```
+
+```{r}
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
+
+seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+```
+
+```{r}
+ElbowPlot(seu, ndims=50)
+```
+
+
+
+https://github.com/icbi-lab/crc-atlas/blob/82c15ecc2ea36baa0c4cffe8818bf58e21dcfc48/analyses/50_Mouse_neutrophils_scRNAseq_analysis/3.1.Annotation_and_extraction_of_neutrophils.R
 
 
 ```{r}
@@ -383,6 +423,49 @@ saveRDS(
   file = file.path(rds_dir, "seu_pp_int_cc_calc.rds")
 )
 ```
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
+seu <- FindClusters(seu, resolution = 0.2, cluster.name = "mnn_clusters")
+```
+```{r,fig.height=7,fig.width=7}
+# View resuts
+p2 <- DimPlot(seu, group.by="seurat_clusters") + NoLegend()
+LabelClusters(p2, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0) + ggtitle("Integration with 3000 Features") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r,fig.height=12,fig.width=8}
+DimPlot(seu, reduction = "umap.mnn", group.by = c("orig.ident", "condition", "genotype") ,ncol=1)
+```
+
+```{r,fig.width=10,fig.height=5}
+DimPlot(seu, reduction = "umap.mnn", split.by = "condition")
+```
+
+
+```{r}
+
+# Save your Seurat object
+#saveRDS(seu, file = "seu_pp_int.rds")
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_int.rds")
+)
+# Load it back
+#seu <- readRDS("seu_int.rds")
+```
+
+
+
+
+
+
+
+Older diagnostics
 
 
 Lookin at hev diagnostics
