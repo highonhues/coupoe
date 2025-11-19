@@ -382,8 +382,229 @@ LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colou
 ```
 
 ```{r}
+ncol(seu)
+```
+```{r}
+table(seu$orig.ident)
+```
+
+```{r}
+# Get cell barcodes to KEEP
+cells_to_keep <- WhichCells(seu, expression = cluster_annot %in% c("CapEC2", "Artery", "Mafb+ Vn", "PCV", "HEV", "Aqp7+ CapEC1", "CRP"))
+
+# Subset
+seu_filtered <- subset(seu, cells = cells_to_keep)
+
+# Verify
+table(seu_filtered$cluster_annot)
+```
+
+```{r}
+table(seu_filtered$orig.ident)
+```
+```{r}
+
+saveRDS(
+  object = seu_filtered,
+  file = file.path(rds_dir, "seu_pp_7BEC.rds")) # just in case
+
+```
+
+```{r}
+seu <- seu_filtered
+rm(seu_filtered)
+```
+
+```{r}
+seu
+```
+
+Since we subset we need to process again
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu, nfeatures = 3000)
+
+#cellcycle
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = c("S.Score", "G2M.Score"))
+
+seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+```
+
+```{r}
+seu[["RNA"]] <- split(
+  seu[["RNA"]],
+  f = seu$orig.ident
+)
+```
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration,
+                       features=VariableFeatures(seu),
+                       new.reduction = "integrated.mnn",
+                       verbose = TRUE)
+```
+
+```{r}
+seu <- JoinLayers(seu)
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+```
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_7BEC_processed.rds")) # just in case
+
+```
+
+```{r}
+#Diagnostic Resolution
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
+
+```
+
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.3","RNA_snn_res.0.4", "RNA_snn_res.0.6"),label=TRUE, ncol=1)
+```
+
+
+```{r}
+Idents(seu_obj) <- "RNA_snn_res.0.6"
+```
+
+```{r,fig.height=6, fig.width=7}
+#art -Bmx, Gja5, Gkn3
+#both -Gja4
+#pre- Hlx
+FeaturePlot(seu_obj,c("Bmx", "Gja4", "Gja5","Gkn3","Hlx","S100a4"),label=T)
+```
+
+```{r}
+markers_all_bec <- FindAllMarkers(
+  seu_obj,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+```
+
+```{r}
+write.csv(markers_all_bec,
+          file = "PP_outputs/markers_all_bec_Reann.csv",
+          row.names = FALSE)
+
+```
+
+
+```{r}
+top20_bec <-
+  markers_all_bec %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 20, wt = avg_log2FC) 
+knitr::kable(top20_bec, align = "c")
+```
+```{r}
+#hev icam1 is lower in late
+FeaturePlot(seu_obj,c("Icam1", "Glycam1","Pf4", "Ccl21a"),label=T)
+```
+
+
+```{r}
+annotations <- read.csv("mouse_annotations.csv")
+```
+
+
+```{r}
+get_conserved <- function(cluster){
+  FindConservedMarkers(seu_obj,
+                       ident.1 = cluster,
+                       grouping.var = "condition",
+                       only.pos = TRUE) %>%
+    rownames_to_column(var = "gene") %>%
+    left_join(y = unique(annotations[, c("gene_name", "description")]),
+               by = c("gene" = "gene_name")) %>%
+    cbind(cluster_id = cluster, .)
+  }
+```
+
+
+
+```{r}
+#map_dfr(inputs_to_function, name_of_function)
+levels(Idents(seu_obj))
+clusters_to_use <- levels(Idents(seu_obj))
+conserved_markers <- map_dfr(clusters_to_use, get_conserved)
+```
+
+```{r}
+write.csv(conserved_markers,
+          file = "PP_outputs/conserved_markers_bec.csv",
+          row.names = FALSE)
 
 ```
 
 
 
+```{r}
+top20_cm_bec <-
+  conserved_markers %>%
+  mutate(avg_fc = (WT_avg_log2FC + OE_avg_log2FC + KO_avg_log2FC +CRE_CTRL_avg_log2FC) /4) %>% 
+  dplyr::group_by(cluster_id) %>%
+  dplyr::top_n(n = 20, wt = avg_fc) 
+knitr::kable(top20_cm_bec, align = "c")
+
+```
+
+```{r}
+write.csv(top20_cm_bec,
+          file = "PP_outputs/top20_cm_bec.csv",
+          row.names = FALSE)
+
+```
+
+
+```{r}
+FeaturePlot(seu_obj,c("Mafb", "Vwf","Icam1", "St3gal6"),label=T)
+```
+```{r}
+#Sept4 cap
+
+FeaturePlot(seu_obj,c("Id1", "Id3", "Cxcl10"),label=T)
+```
+
+
+```{r,fig.height=6, fig.width=7}
+#capec2 -Nr4a1, Sgk1
+#Ramp3 ec1 n 2
+#
+FeaturePlot(seu_obj,c("Ramp3", "Gja1", "Sgk1","Nr4a1"),label=T)
+```
+
+```{r}
+#crp
+
+FeaturePlot(seu_obj,c("Apoe", "Nuf2", "Apln"),label=T)
+```
