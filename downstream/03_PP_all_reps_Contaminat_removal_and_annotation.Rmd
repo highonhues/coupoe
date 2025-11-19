@@ -33,6 +33,7 @@ library(gprofiler2)
 library(multtest)
 library(metap)
 library(future)
+library(parallelly)
 plan(multicore, workers = 8)
 
 
@@ -92,13 +93,17 @@ CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
 art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
 
 
-
 ```
 
 ```{r}
 
 # Load it back
 seu <- readRDS(file.path(rds_dir, "seu_pp_int_fin.rds"))
+```
+
+
+```{r}
+seu
 ```
 
 
@@ -201,6 +206,10 @@ for (i in seq_along(modules)) {
 wrap_plots(plot_list, ncol = 1)
 
 ```
+```{r}
+ncol(seu)
+table(seu$orig.ident)
+```
 
 Subset will keep cells where the condition specified is True.
 
@@ -240,13 +249,21 @@ seu <- readRDS(file.path(rds_dir, "seu_pp_subset.rds"))
 seu
 ```
 An object of class Seurat 
-23109 features across 15222 samples within 2 assays 
+22109 features across 14104 samples within 2 assays 
 Active assay: RNA (20109 features, 3000 variable features)
  3 layers present: data, counts, scale.data
  1 other assay present: mnn.reconstructed
  3 dimensional reductions calculated: pca, integrated.mnn, umap.mnn
 
-
+```{r}
+table(seu$orig.ident)
+ncol(seu)
+```
+COUPOE-PP-POS1            COUPOE-PP1            COUPOE-PP2             COUPWT-PP 
+                 1121                  3537                  4986                  3850 
+PP-COUPKO-HT6-cre-neg PP-COUPKO-HT7-cre-pos 
+                  377                   233 
+14104                
 Now I think we scale and clean again and recluster!
 
 https://github.com/tgen/banovichlab/blob/31704e559e9b098a82508d6bd04bb81aa799a263/ILD_eQTL/annotation.R#L61
@@ -274,8 +291,9 @@ g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens",
 seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
 #Correcting by cc diff and viewing its effect
 #This will rewrite the scale data
-seu$CC.Difference <- seu$S.Score - seu$G2M.Score
-seu <- ScaleData(seu,assay="RNA", vars.to.regress = "CC.Difference")
+#seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = c("S.Score", "G2M.Score"))
+#seu <- ScaleData(seu,assay="RNA", vars.to.regress = "CC.Difference")
 
 seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
 
@@ -309,6 +327,19 @@ seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = 
 seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
 ```
 
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_subset_after_umap.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
+```
+
+
 ```{r}
 #Diagnostic Resolution
 seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
@@ -330,7 +361,249 @@ clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta
 Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
 ```
 
-I will stick with 0.2!
+I will stick with 0.2 most prolly but the weird sample split I wanna see whats going on. 0.1 clust becomes 8 + 
+at 
+```{r}
+?FindMarkers
+```
+pos avglog2fc means they are more in grp 1 and neg means in grp 2
+
+
+
+```{r}
+#compare daughter clusters
+
+Idents(seu_obj) <- "RNA_snn_res.0.2"
+
+#old clust 0.1 2 become 8 and 5 at res 0.2 
+
+markers_split <- FindMarkers(
+  seu,
+  ident.1 = "2",
+  ident.2 = "1",
+  assay = "RNA",      
+  logfc.threshold = 0.25,
+  min.pct = 0.1
+)
+head(markers_split %>% arrange(desc(avg_log2FC)), n=20)
+```
+
+
+```{r,fig.width=9}
+FeaturePlot(seu_obj,c("Fbln5","Bmx"),label=T)
+```
+
+
+```{r}
+#compare daughter clusters
+
+Idents(seu_obj) <- "RNA_snn_res.0.2"
+
+#old clust 0.1 2 become 8 and 5 at res 0.2 
+
+markers_split <- FindMarkers(
+  seu,
+  ident.1 = "8",
+  ident.2 = "5",
+  assay = "RNA",      
+  logfc.threshold = 0.25,
+  min.pct = 0.1
+)
+head(markers_split %>% arrange(desc(avg_log2FC)), n=10)
+```
+```{r}
+table_02 <- table(seu_obj$RNA_snn_res.0.2, seu$condition)
+prop.table(table_02, margin = 1) 
+```
+
+
+```{r}
+head(markers_split %>% arrange(desc(avg_log2FC)), n=10)
+```
+Lets try to see markers for all the made up clusters first
+
+```{r}
+
+markers_all <- FindAllMarkers(
+  seu_obj,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+```
+
+```{r}
+write.csv(markers_all,
+          file = "PP_outputs/markers_all.csv",
+          row.names = FALSE)
+
+```
+
+```{r}
+top20 <-
+  markers_all %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 20, wt = avg_log2FC) 
+knitr::kable(top20, align = "c")
+```
+
+```{r}
+Idents(seu_obj) <- "RNA_snn_res.0.2"
+```
+
+
+```{r,fig.width=9}
+FeaturePlot(seu_obj,c("Apln","Angpt2","Pgf"),label=T)
+```
+
+```{r,fig.height=8,fig.width=8}
+FeaturePlot(seu_obj,hev_markers,label=T)
+FeaturePlot(seu_obj,PCV_markers,label=T)
+
+```
+
+
+```{r,fig.height=8,fig.width=8}
+FeaturePlot(seu_obj,CapEC2_marker,label=T)
+FeaturePlot(seu_obj,CapEC1_marker,label=T)
+
+```
+
+```{r,fig.height=8,fig.width=8}
+DotPlot(seu_obj,CapEC2_marker)
+DotPlot(seu_obj,CapEC1_marker)
+
+```
+Trying with 0.1
+
+```{r}
+Idents(seu_obj) <- "RNA_snn_res.0.1"
+
+markers_all_1 <- FindAllMarkers(
+  seu_obj,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+```
+
+```{r}
+write.csv(markers_all_1,
+          file = "PP_outputs/markers_all_1.csv",
+          row.names = FALSE)
+
+```
+
+```{r}
+top20 <-
+  markers_all_1 %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 20, wt = avg_log2FC) 
+knitr::kable(top20, align = "c")
+```
+
+```{r}
+annotations <- read.csv("mouse_annotations.csv")
+```
+
+```{r}
+head(annotations)
+```
+
+
+```{r}
+get_conserved <- function(cluster){
+  FindConservedMarkers(seu_obj,
+                       ident.1 = cluster,
+                       grouping.var = "condition",
+                       only.pos = TRUE) %>%
+    rownames_to_column(var = "gene") %>%
+    left_join(y = unique(annotations[, c("gene_name", "description")]),
+               by = c("gene" = "gene_name")) %>%
+    cbind(cluster_id = cluster, .)
+  }
+```
+
+```{r}
+#map_dfr(inputs_to_function, name_of_function)
+levels(Idents(seu_obj))
+clusters_to_use <- levels(Idents(seu_obj))
+conserved_markers <- map_dfr(clusters_to_use, get_conserved)
+
+```
+```{r}
+
+top20_cm <-
+  conserved_markers %>%
+  mutate(avg_fc = (WT_avg_log2FC + OE_avg_log2FC + KO_avg_log2FC +CRE_CTRL_avg_log2FC) /4) %>% 
+  dplyr::group_by(cluster_id) %>%
+  dplyr::top_n(n = 20, wt = avg_fc) 
+knitr::kable(top20_cm, align = "c")
+```
+
+```{r}
+write.csv(top20_cm,
+          file = "PP_outputs/top20_cm.csv",
+          row.names = FALSE)
+
+```
+
+
+
+```{r}
+FeaturePlot(seu_obj,c("Esm1", "Cdca2", "Apln","Sox4"),label=T) #CRP
+```
+
+```{r}
+FeaturePlot(seu_obj,c("Cxcl10", "Cxcl9","Isg15"),label=T) #Caplfn
+```
+
+```{r}
+FeaturePlot(seu_obj,c("Gpihbp1", "Nr4a1","Scgb3a1","Atf3"),label=T) #Cap but ehich 5 as EC2
+#Nr4a1 expressed in capec2 and caplfn but NOT capec1
+#BC005624 in ec1 high lil, Cxcl1 ec2 only
+```
+```{r, fig.width=10}
+Idents(seu_obj) <- "RNA_snn_res.0.2"
+VlnPlot(seu_obj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
+        group.by = "RNA_snn_res.0.2")
+
+```
+
+```{r}
+seu_oe <- subset(seu_obj, subset = condition == "OE")
+Idents(seu_oe) <- "RNA_snn_res.0.2"
+
+markers_c2_oe <- FindMarkers(
+  seu_oe,
+  ident.1 = "2",
+  ident.2 = setdiff(levels(Idents(seu_oe)), "2"),
+  logfc.threshold = 0.25,
+  min.pct = 0.1
+)
+
+```
+
+
+
+
+
+
+at res 0.2-
+0-CapEC2/Capillary (atlas)
+1-art
+2-
+3-PCV
+4-HEV
+5-CapEC1/(capillary Aqp7+)
+6-Pericytes
+7-FRC
+8-CRP
+9-
+
+
 
 ```{r}
 rm(seu_obj)
@@ -363,4 +636,21 @@ saveRDS(
 # Load it back
 #seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
 ```
+
+
+
+
+https://github.com/JEFworks-Lab/jefworks-lab.github.io/blob/12987fd72ef14d4310cb27a0c01de708370695ea/_posts/2020-04-06-quickly-creating-pseudobulks.md?plain=1#L21
+Single cell gene expression analysis often involves identifying
+transcriptionally distinct clusters of cells that may represent
+different cell-types or cell-states. After identifying these clusters of
+cells, we may want to summarize the gene expression profiles for each
+cluster by aggregating them into pseudobulks ie. the summed up gene
+expression profile for all cells in each cluster. I find pseudobulks
+really helpful in heatmap visualizations to look at top marker or
+differentially expressed genes, particularly if you have cell-types or
+cell-states across many patients or conditions. Here, I will compare the
+runtimes of two different ways to create these pseudobulks that I recently learned from [Kamil
+Slowikowski](https://slowkow.com/) using
+simulated data.
 
