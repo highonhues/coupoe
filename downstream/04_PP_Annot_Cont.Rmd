@@ -1,0 +1,389 @@
+---
+title: "04_PP_Annot_Cont"
+author: "Ananya Gupta"
+date: "2025-11-19"
+output: html_document
+---
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+library(future)
+library(parallelly)
+plan(multicore, workers = 8)
+
+
+#for parallelization
+options(future.globals.maxSize = 8000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
+)
+
+
+```{r}
+
+#Contaminants
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
+
+# cell markers
+
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
+CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
+PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
+CapEC_marker <- c("Cdh13", "Emcn", "Gja1", "Gpihbp1", "Ly6a", "Ly6c1", "Podxl", "Ramp3")
+CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund", "Nfkbia", "Nr4a1", "Sgk1") #this overlaps w a lot of others and the capec1 too
+CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
+art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
+
+
+```
+
+
+at res 0.2-
+0-CapEC2/Capillary (atlas)
+1-art
+2-Mafb+ Vn
+3-PCV
+4-HEV
+5-CapEC1/(capillary Aqp7+)
+6-Pericytes
+7-FRC
+8-CRP
+9-No pecam1, glial cells
+
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
+```
+
+```{r}
+seu
+```
+
+An object of class Seurat 
+23109 features across 14104 samples within 2 assays 
+Active assay: RNA (20109 features, 3000 variable features)
+ 3 layers present: data, counts, scale.data
+ 1 other assay present: mnn.reconstructed
+ 3 dimensional reductions calculated: pca, integrated.mnn, umap.mnn
+```{r}
+seu <- FindClusters(seu, resolution = 0.2, cluster.name = "mnn_clusters")
+```
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_subset_after_res02.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_res02.rds"))
+```
+
+```{r}
+  
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_res02.rds"))
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+```{r}
+a <- DimPlot(seu, group.by="seurat_clusters") + NoLegend() + ggtitle("Cluster Split By Cell") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(a, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+
+```{r, fig.height=6, fig.width=12}
+
+DimPlot(seu, group.by="seurat_clusters", split.by = "condition",label=T) + ggtitle("Viewing Cells in each cluster Split By Condition") +
+  theme(plot.title = element_text(hjust = 0.5))#LabelClusters(sp, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+in some cases you will have clusters that do not have enough cells for a particular group - and your function will fail. For these clusters you will need to use FindAllMarkers()
+
+
+```{r}
+annotations <- read.csv("mouse_annotations.csv")
+```
+
+```{r}
+head(annotations)
+```
+
+
+```{r}
+get_conserved <- function(cluster){
+  FindConservedMarkers(seu,
+                       ident.1 = cluster,
+                       grouping.var = "condition",
+                       only.pos = TRUE) %>%
+    rownames_to_column(var = "gene") %>%
+    left_join(y = unique(annotations[, c("gene_name", "description")]),
+               by = c("gene" = "gene_name")) %>%
+    cbind(cluster_id = cluster, .)
+  }
+```
+
+```{r}
+#map_dfr(inputs_to_function, name_of_function)
+levels(Idents(seu))
+clusters_to_use <- levels(Idents(seu))
+conserved_markers <- map_dfr(clusters_to_use, get_conserved)
+
+```
+
+```{r}
+
+top20_cm <-
+  conserved_markers %>%
+  mutate(avg_fc = (WT_avg_log2FC + OE_avg_log2FC + KO_avg_log2FC +CRE_CTRL_avg_log2FC) /4) %>% 
+  dplyr::group_by(cluster_id) %>%
+  dplyr::top_n(n = 20, wt = avg_fc) 
+knitr::kable(top20_cm, align = "c")
+```
+
+capillary resident regenerative population (CRP) that displays the angiogenic endothelial marker Apln,CRP, for genes associated with endothelial specification during early development or with stem cells (e.g., Ets2, Cxcr4, Nes)
+
+
+```{r}
+write.csv(top20_cm,
+          file = "PP_outputs/top20_cm_2.0",
+          row.names = FALSE)
+
+```
+
+
+
+```{r}
+# CRP
+FeaturePlot(seu, c("Esm1", "Cdca2", "Apln"),label=T)
+```
+
+Venous EC, comprising HEC and non-HEC (Vn) subsets, share expression of the vein-specifying transcription factor Nr2f2 (Coup-TFII)13, and the vein-associated chemokine interceptor Ackr1 (DARC14).
+
+Is 2 Late HEC?
+
+```{r}
+# Hec vs hec late
+FeaturePlot(seu, c("Glycam1","Ubd", "Plvap"),label=T)
+```
+
+```{r}
+?FindAllMarkers
+```
+
+
+```{r}
+all_markers <- FindAllMarkers(seu, only.pos = TRUE)
+
+```
+
+```{r}
+top20 <-
+  all_markers %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 20, wt = avg_log2FC) 
+knitr::kable(top20, align = "c")
+```
+```{r}
+VlnPlot(seu,features="Gpm6b", group.by="seurat_clusters")
+```
+
+
+```{r}
+write.csv(top20,
+          file = "PP_outputs/top20_allmarkers.csv",
+          row.names = FALSE)
+
+```
+
+```{r}
+write.csv(all_markers,
+          file = "PP_outputs/listof_allmarkers.csv",
+          row.names = FALSE)
+
+```
+
+
+
+Check identity being stable
+
+```{r}
+cluster_2_cells <- subset(seu, subset = seurat_clusters == 2)
+Idents(cluster_2_cells) <- "condition"
+```
+
+```{r,fig.width=12}
+DotPlot(seu, features = c("Nr2f2","Madcam1","Ccl21a","Vcam1","Sele","Icam1","Plvap","St6gal1","Nkx2-3","Mafb"), group.by = "condition")
+```
+
+```{r,fig.width=9, fig.height=4}
+#Pecam1 = Endothelial Cell
+# Sele,Selp=PCV
+#Vwf,Icam1,St3gal6= Venous
+#Ccl21a,Glycam1,gcnt1 =HEV
+
+DotPlot(seu, features = c("Pecam1","Sele","Selp","Ccl21a","Glycam1","Chst4","Gcnt1","Vwf","Icam1","St3gal6","Lxn"), group.by = "seurat_clusters")
+```
+
+```{r,fig.width=8}
+DotPlot(seu, features = c("Ubd","Nr2f2","Madcam1","Ccl21a","Vcam1","Sele","Icam1","Podxl","Pecam1"), group.by = "seurat_clusters")
+```
+
+Doublet?
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA"), group.by = "seurat_clusters",
+              pt.size = 0,
+              ncol = 3) #+ ggtitle("After QC")
+```
+
+at res 0.2-
+0-CapEC2/Capillary (atlas)
+1-art
+2-Mafb+ Vn
+3-PCV
+4-HEV
+5-CapEC1/(capillary Aqp7+)
+6-Pericytes
+7-FRC
+8-CRP
+9-No pecam1, glial cells
+
+```{r}
+cell_type  <- c(
+  "0" = "CapEC2",
+  "1" = "Art",
+  "2" = "Mafb+ Vn",
+  "3" = "PCV",
+  "4" = "HEV",
+  "5" = "Aqp7+ CapEC1",
+  "6" = "Pericytes",
+  "7" = "FRC",
+  "8" = "CRP",
+  "9" = "Glial Cells")
+
+```
+
+```{r}
+# Initialize empty column
+seu@meta.data$cluster_annot <- NA
+
+# Map each cluster manually
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Mafb+ Vn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "Aqp7+ CapEC1"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pericytes"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "FRC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "CRP"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "Glial Cells"
+
+# Set as identity
+Idents(seu) <- "cluster_annot"
+
+# Verify
+table(seu@meta.data$cluster_annot)
+```
+
+
+```{r}
+#seu <- RenameIdents(seu, new_names)
+head(Idents(seu))
+```
+
+```{r}
+
+
+```
+
+
+```{r}
+
+levels(Idents(seu))
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+
+```{r}
+an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+
+```
+
+
+
