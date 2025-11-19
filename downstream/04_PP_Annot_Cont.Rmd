@@ -107,7 +107,7 @@ at res 0.2-
 6-Pericytes
 7-FRC
 8-CRP
-9-No pecam1
+9-No pecam1, glial cells
 
 
 ```{r}
@@ -118,7 +118,12 @@ seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
 seu
 ```
 
-
+An object of class Seurat 
+23109 features across 14104 samples within 2 assays 
+Active assay: RNA (20109 features, 3000 variable features)
+ 3 layers present: data, counts, scale.data
+ 1 other assay present: mnn.reconstructed
+ 3 dimensional reductions calculated: pca, integrated.mnn, umap.mnn
 ```{r}
 seu <- FindClusters(seu, resolution = 0.2, cluster.name = "mnn_clusters")
 ```
@@ -128,13 +133,18 @@ seu <- FindClusters(seu, resolution = 0.2, cluster.name = "mnn_clusters")
 
 saveRDS(
   object = seu,
-  file = file.path(rds_dir, "seu_pp_subset_after_0.2.rds")) # just in case
+  file = file.path(rds_dir, "seu_pp_subset_after_res02.rds")) # just in case
   
   
 # Load it back
-#seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap_0.2.rds"))
+#seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_res02.rds"))
 ```
 
+```{r}
+  
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_res02.rds"))
+```
 
 
 ```{r}
@@ -239,6 +249,9 @@ top20 <-
   dplyr::top_n(n = 20, wt = avg_log2FC) 
 knitr::kable(top20, align = "c")
 ```
+```{r}
+VlnPlot(seu,features="Gpm6b", group.by="seurat_clusters")
+```
 
 
 ```{r}
@@ -288,4 +301,89 @@ VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA"), group.by = "seurat_clus
               pt.size = 0,
               ncol = 3) #+ ggtitle("After QC")
 ```
+
+at res 0.2-
+0-CapEC2/Capillary (atlas)
+1-art
+2-Mafb+ Vn
+3-PCV
+4-HEV
+5-CapEC1/(capillary Aqp7+)
+6-Pericytes
+7-FRC
+8-CRP
+9-No pecam1, glial cells
+
+```{r}
+cell_type  <- c(
+  "0" = "CapEC2",
+  "1" = "Art",
+  "2" = "Mafb+ Vn",
+  "3" = "PCV",
+  "4" = "HEV",
+  "5" = "Aqp7+ CapEC1",
+  "6" = "Pericytes",
+  "7" = "FRC",
+  "8" = "CRP",
+  "9" = "Glial Cells")
+
+```
+
+```{r}
+# Initialize empty column
+seu@meta.data$cluster_annot <- NA
+
+# Map each cluster manually
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Mafb+ Vn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "Aqp7+ CapEC1"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pericytes"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "FRC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "CRP"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "Glial Cells"
+
+# Set as identity
+Idents(seu) <- "cluster_annot"
+
+# Verify
+table(seu@meta.data$cluster_annot)
+```
+
+
+```{r}
+#seu <- RenameIdents(seu, new_names)
+head(Idents(seu))
+```
+
+```{r}
+
+
+```
+
+
+```{r}
+
+levels(Idents(seu))
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+
+```{r}
+an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+
+```
+
+
 
