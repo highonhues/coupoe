@@ -411,6 +411,12 @@ saveRDS(
 ```
 
 ```{r}
+
+```
+
+
+
+```{r}
 seu <- seu_filtered
 rm(seu_filtered)
 ```
@@ -469,6 +475,49 @@ saveRDS(
 
 ```
 
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_processed.rds"))
+```
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.4, cluster.name = "mnn_clusters")
+```
+
+
+```{r}
+# Initialize empty column
+seu@meta.data$cluster_annot <- NA
+
+# Map each cluster manually
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Mafb+ Vn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "TrEC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pre-Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele- Cdh13+"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Barrier EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "CRP"
+
+# Set as identity
+Idents(seu) <- "cluster_annot"
+
+# Verify
+table(seu@meta.data$cluster_annot)
+```
+
+
+```{r}
+an2 <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+```
+
+
+
 ```{r}
 #Diagnostic Resolution
 seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
@@ -486,12 +535,12 @@ clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta
   )
 ```
 ```{r,fig.height=15,fig.width=7}
-Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.3","RNA_snn_res.0.4", "RNA_snn_res.0.6"),label=TRUE, ncol=1)
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.3","RNA_snn_res.0.4","RNA_snn_res.0.5", "RNA_snn_res.0.6"),label=TRUE, ncol=1)
 ```
 
 
 ```{r}
-Idents(seu_obj) <- "RNA_snn_res.0.6"
+Idents(seu_obj) <- "RNA_snn_res.0.4"
 ```
 
 ```{r,fig.height=6, fig.width=7}
@@ -513,7 +562,7 @@ markers_all_bec <- FindAllMarkers(
 
 ```{r}
 write.csv(markers_all_bec,
-          file = "PP_outputs/markers_all_bec_Reann.csv",
+          file = "PP_outputs/markers_all_bec_res04.csv",
           row.names = FALSE)
 
 ```
@@ -526,6 +575,15 @@ top20_bec <-
   dplyr::top_n(n = 20, wt = avg_log2FC) 
 knitr::kable(top20_bec, align = "c")
 ```
+
+
+```{r}
+write.csv(top20_bec,
+          file = "PP_outputs/top20_bec04res.csv",
+          row.names = FALSE)
+
+```
+
 ```{r}
 #hev icam1 is lower in late
 FeaturePlot(seu_obj,c("Icam1", "Glycam1","Pf4", "Ccl21a"),label=T)
@@ -561,7 +619,7 @@ conserved_markers <- map_dfr(clusters_to_use, get_conserved)
 
 ```{r}
 write.csv(conserved_markers,
-          file = "PP_outputs/conserved_markers_bec.csv",
+          file = "PP_outputs/conserved_markers_bec_res04.csv",
           row.names = FALSE)
 
 ```
@@ -607,4 +665,52 @@ FeaturePlot(seu_obj,c("Ramp3", "Gja1", "Sgk1","Nr4a1"),label=T)
 #crp
 
 FeaturePlot(seu_obj,c("Apoe", "Nuf2", "Apln"),label=T)
+```
+
+
+
+Five capillary populations shared expression of Cdh13, Emcn, Gja1, and Gpihbp1, previously described as gene markers of capillary EC in PLN6 (Fig. 1f). A transitional phenotype subset (TrEC) expresses canonical capillary genes as well as some HEC genes, albeit at low levels compared to bona fide HEC (Fig. 4a, b). TrEC bridge other CapEC to the venous branch in tSpace projections (Fig. 1e), further suggesting a close relation to HEC. They express Chst2 and the HEC genes St3Gal6 and Fut7, which encode glycosyltransferases for the synthesis of sialyl LewisX (SLex) and 6-sulfo-SLex, carbohydrates that can initiate tethering of lymphocytes under shear flow.Chst4 and Gcnt1 are nearly undetectable in TrECs, suggesting that TrEC and HEC might display different glycotopes. 
+
+
+```{r,fig.width=9, fig.height=4}
+#Pecam1 = Endothelial Cell
+# Trec
+DotPlot(seu_obj, features = c("Gcnt1","Cdh13","Emcn","Chst4","Gja1","Pecam1"), group.by = "seurat_clusters")
+```
+
+```{r}
+levels(Idents(seu_obj))
+```
+
+
+```{r,fig.width=9, fig.height=4}
+# 7 is Vn but not PCV aka 4
+# Trec
+Idents(seu_obj) <- "RNA_snn_res.0.4"
+DotPlot(seu_obj, features = c("Bgn","Ctsh","Selp","B4galt6","Sele","Ackr1","Cytl1","Gucy1a1","Cdh13","Icam1"), group.by = "RNA_snn_res.0.4")
+```
+
+
+```{r}
+#compare daughter clusters
+
+Idents(seu_obj) <- "RNA_snn_res.0.4"
+
+#old clust 0.1 2 become 8 and 5 at res 0.2 
+
+markers_split <- FindMarkers(
+  seu,
+  ident.1 = "7",
+  ident.2 = "4",
+  assay = "RNA",      
+  logfc.threshold = 0.25,
+  min.pct = 0.1
+)
+head(markers_split %>% arrange(desc(avg_log2FC)), n=20)
+```
+
+```{r,fig.width=9, fig.height=4}
+#Pecam1 = Endothelial Cell
+# Trec
+DotPlot(seu_obj, features = c("Pecam1", "Emcn", "Vwf", "Cdh13"), group.by = "RNA_snn_res.0.4")
 ```
