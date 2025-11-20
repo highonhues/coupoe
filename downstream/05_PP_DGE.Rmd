@@ -1,0 +1,247 @@
+---
+title: "05_PP_DGE"
+author: "Ananya Gupta"
+date: "2025-11-19"
+output: 05_PP_DGE
+---
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(scater)
+library(metap)
+library(future)
+library(parallelly)
+library(scuttle)
+library(SingleCellExperiment)
+library(edgeR)
+library(limma)
+library(fgsea)   
+plan(multicore, workers = 8)
+
+
+#for parallelization
+options(future.globals.maxSize = 8000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+
+For differential expression analysis of a multi-sample single-cell experiment, pseudo-bulk methods outperform DE methods speciĄcally designed at the single-cell level in terms of both
+stability and computational speed [14].
+We explore the pseudo-bulk proĄles using a multi-dimensional scaling (MDS) plot. This visualizes the differences between the expression proĄles of different samples in two dimensions.
+It can be seen that pseudo-bulk samples from the same cell cluster are close to each other.
+
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
+```
+
+```{r}
+DefaultAssay(seu)
+```
+
+
+```{r}
+annotations <- read.csv("PP_outputs/top20_bec04res.csv")
+```
+
+```{r}
+
+```
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Mafb+ Vn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "TrEC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pre-Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele-"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Barrier EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "CRP"
+
+Before doing DGE, you should aggregate (combine) the expression values of cells from the same sample and the same cell type — using either sum, mean, or a mixed-model random effect. This aggregation step is called pseudobulk, and it is necessary because cells inside the same sample are correlated (not independent).
+
+Lets start with HEV
+
+
+```{r,fig.width=14,fig.height=5}
+an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+
+```{r}
+head(seu@meta.data)
+```
+
+```{r,fig.width=9, fig.height=4}
+# 7 is Vn but not PCV aka 4
+# Trec
+
+DotPlot(seu, features = c("Bgn","Ctsh","Selp","B4galt6","Sele","Ackr1","Cytl1","Gucy1a1","Icam1"), group.by = "cluster_annot")
+```
+
+
+```{r}
+sce <- as.SingleCellExperiment(seu, assay = "RNA")
+
+```
+
+```{r}
+head(colData(sce))
+
+```
+
+```{r}
+table(sce$orig.ident)
+```
+
+
+```{r}
+set.seed(123)  # for reproducibility
+
+meta_df <- as.data.frame(colData(sce)) %>%
+  mutate(cell = colnames(sce)) %>%
+  group_by(orig.ident) %>%
+  mutate(
+    # shuffle cell order within each sample
+    .rand = sample(seq_len(n())),
+    # assign roughly equal labels 1,2,3 in random order
+    pseudo_rep = rep(1:3, length.out = n())[order(.rand)]
+  ) %>%
+  ungroup()
+
+# write back to SCE
+colData(sce)$pseudo_rep <- meta_df$pseudo_rep[match(colnames(sce), meta_df$cell)]
+
+```
+
+keeping all cell types tgt just for qc
+
+```{r}
+colData(sce)$pb_id <- with(colData(sce),
+                           paste(orig.ident, paste0("rep", pseudo_rep), sep = "_"))
+
+# aggregate counts to pseudobulk level
+pb_sce <- aggregateAcrossCells(
+  sce,
+  ids = DataFrame(
+    pb_id      = sce$pb_id,
+    orig.ident = sce$orig.ident,
+    condition  = sce$condition,
+    site       = sce$site,
+    pseudo_rep = sce$pseudo_rep
+  )
+)
+
+```
+
+```{r}
+pb_sce
+head(colData(pb_sce))
+```
+```{r}
+as.data.frame(colData(pb_sce)) %>%
+  arrange(ncells) %>%
+  select(pb_id, orig.ident, condition, pseudo_rep, ncells)
+
+```
+
+```{r}
+# keep a copy of raw counts
+assay(pb_sce, "counts_raw") <- assay(pb_sce, "counts")
+
+# add library size
+colData(pb_sce)$libsize <- colSums(assay(pb_sce, "counts_raw"))
+
+
+```
+
+```{r}
+
+# log-normalize counts for PCA
+pb_sce <- logNormCounts(pb_sce)
+```
+
+```{r}
+pb_sce <- runPCA(pb_sce, exprs_values = "logcounts", ncomponents = 5)
+
+
+```
+
+```{r}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition")
+plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident")
+plotReducedDim(pb_sce, "PCA", colour_by = "pseudo_rep")
+plotReducedDim(pb_sce, "PCA", colour_by = "ncells")
+plotReducedDim(pb_sce, "PCA", colour_by = "libsize")
+
+```
+I want to confirm if thats batch effect
+
+```{r}
+mat <- assay(pb_sce, "logcounts")
+batch <- pb_sce$orig.ident
+
+mat_corrected <- removeBatchEffect(mat, batch=batch)
+pc <- prcomp(t(mat_corrected))
+df <- data.frame(
+  PC1 = pc$x[,1],
+  PC2 = pc$x[,2],
+  condition = pb_sce$condition,
+  orig.ident = pb_sce$orig.ident
+)
+
+#library(ggplot2)
+ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
+  geom_point(size=3) +
+  theme_bw()
+
+```
+```{r}
+table(sce$cluster_annot, sce$condition)
+
+```
+
+Important to create cell type pseudobulk
