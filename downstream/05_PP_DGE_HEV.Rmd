@@ -2,7 +2,7 @@
 title: "05_PP_DGE"
 author: "Ananya Gupta"
 date: "2025-11-19"
-output: 05_PP_DGE
+output: 05_HEV_PP_DGE
 ---
 
 ```{r env_loading, results='FALSE',}
@@ -65,7 +65,7 @@ base_dir <- "PP_outputs"
 # Define output directories
 rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
 fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
-celltype_dir <- file.path(base_dir, "PP_PCV")
+celltype_dir <- file.path(base_dir, "PP_HEV")
 dir.create(celltype_dir, showWarnings = FALSE, recursive = TRUE)
 
 
@@ -119,139 +119,6 @@ an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("A
 LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
 ```
 
-
-```{r}
-head(seu@meta.data)
-```
-
-```{r,fig.width=9, fig.height=4}
-# 7 is Vn but not PCV aka 4
-# Trec
-
-DotPlot(seu, features = c("Bgn","Ctsh","Selp","B4galt6","Sele","Ackr1","Cytl1","Gucy1a1","Icam1"), group.by = "cluster_annot")
-```
-
-
-```{r}
-sce <- as.SingleCellExperiment(seu, assay = "RNA")
-
-```
-
-```{r}
-head(colData(sce))
-
-```
-
-```{r}
-table(sce$orig.ident)
-```
-
-
-```{r}
-set.seed(1234)  # for reproducibility
-
-meta_df <- as.data.frame(colData(sce)) %>%
-  mutate(cell = colnames(sce)) %>%
-  group_by(orig.ident) %>%
-  mutate(
-    # shuffle cell order within each sample
-    .rand = sample(seq_len(n())),
-    # assign roughly equal labels 1,2,3 in random order
-    pseudo_rep = rep(1:3, length.out = n())[order(.rand)]
-  ) %>%
-  ungroup()
-
-# write back to SCE
-colData(sce)$pseudo_rep <- meta_df$pseudo_rep[match(colnames(sce), meta_df$cell)]
-
-```
-
-keeping all cell types tgt just for qc
-
-```{r}
-colData(sce)$pb_id <- with(colData(sce),
-                           paste(orig.ident, paste0("rep", pseudo_rep), sep = "_"))
-
-# aggregate counts to pseudobulk level
-pb_sce <- aggregateAcrossCells(
-  sce,
-  ids = DataFrame(
-    pb_id      = sce$pb_id,
-    orig.ident = sce$orig.ident,
-    condition  = sce$condition,
-    site       = sce$site,
-    pseudo_rep = sce$pseudo_rep
-  )
-)
-
-```
-
-```{r}
-pb_sce
-head(colData(pb_sce))
-```
-```{r}
-as.data.frame(colData(pb_sce)) %>%
-  arrange(ncells) %>%
-  select(pb_id, orig.ident, condition, pseudo_rep, ncells)
-
-```
-
-```{r}
-# keep a copy of raw counts
-assay(pb_sce, "counts_raw") <- assay(pb_sce, "counts")
-
-# add library size
-colData(pb_sce)$libsize <- colSums(assay(pb_sce, "counts_raw"))
-
-
-```
-
-```{r}
-
-# log-normalize counts for PCA
-pb_sce <- logNormCounts(pb_sce)
-```
-
-```{r}
-pb_sce <- runPCA(pb_sce, exprs_values = "logcounts", ncomponents = 5)
-
-
-```
-
-```{r}
-plotReducedDim(pb_sce, "PCA", colour_by = "condition")
-plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident")
-plotReducedDim(pb_sce, "PCA", colour_by = "pseudo_rep")
-plotReducedDim(pb_sce, "PCA", colour_by = "ncells")
-plotReducedDim(pb_sce, "PCA", colour_by = "libsize")
-
-```
-I want to confirm if thats batch effect
-
-```{r}
-mat <- assay(pb_sce, "logcounts")
-batch <- pb_sce$orig.ident
-
-mat_corrected <- removeBatchEffect(mat, batch=batch)
-pc <- prcomp(t(mat_corrected))
-df <- data.frame(
-  PC1 = pc$x[,1],
-  PC2 = pc$x[,2],
-  condition = pb_sce$condition,
-  orig.ident = pb_sce$orig.ident
-)
-
-#library(ggplot2)
-ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
-  geom_point(size=3) +
-  theme_bw()
-
-```
-```{r}
-table(sce$cluster_annot, sce$condition)
-
-```
 
 Important to create cell type pseudobulk
 
@@ -341,15 +208,6 @@ pseudobulk_celltype <- function(
 ```
 
 ```{r}
-pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
-```
-```{r}
-pb_pcv
-#head(colData(pb_pcv))
-
-```
-
-```{r}
 
 #from pb make metadata,design matrix, dge list , filter, norm,disp and GLM
 dge_prepare <- function(pb) {
@@ -396,18 +254,20 @@ dge_prepare <- function(pb) {
 
 ```
 
+
+##DGE
 ```{r}
-#pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
-pcv_dge <- dge_prepare(pb_pcv)
+pb_pcv <- pseudobulk_celltype(seu, celltype = "HEV")
+hev_dge <- dge_prepare(pb_pcv)
 
 
 ```
-
 ```{r}
-pcv_dge$design
-cbind(pcv_dge$meta$pb_id, pcv_dge$meta$condition)
-
+pcv_dge <- hev_dge
+rm(hev_dge)
 ```
+
+
 #pos fc means genes are higher in oe/ko/front neg means higher in wt 
 ```{r}
 fit <- pcv_dge$fit
@@ -461,6 +321,25 @@ deg_list <- list(
 
 OE WT
 
+
+```{r,fig.width=9,fig.height=7}
+EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,     # log2 fold change cutoff of ±1
+  pointSize = 2.0,
+  labSize = 5,
+  #col = c('grey30', 'grey30', 'royalblue', 'red2'),
+  title = 'OE vs WT (HEV)',
+  subtitle = 'DEG Volcano Plot',
+  caption = 'Right = Upregulated | Left = Downregulated',
+  legendPosition = 'right'
+)
+```
+
 ```{r}
 # Significant DE genes
 sig_deg <- deg_oe_wt %>% 
@@ -504,12 +383,6 @@ head(ego_bp)
 
 ```
 
-```{r, fig.height=9, fig.width=14}
-barplot(ego_bp, showCategory = 20)
-dotplot(ego_bp, showCategory = 20)
-
-```
-
 
 
 
@@ -519,9 +392,9 @@ ETS
 ranks <- deg_oe_wt$logFC
 names(ranks) <- rownames(deg_oe_wt)
 ranks <- sort(ranks, decreasing = TRUE)
-#library(msigdbr)
+library(msigdbr)
 
-msig_c3 <- msigdbr(species = "Mus musculus", category = "C3") #, subcategory = "TFT")
+msig_c3 <- msigdbr(species = "Mus musculus", category = "C3", subcategory = "TFT")
 msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
 
 
@@ -564,13 +437,11 @@ ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
 ```
 
 
-
-
 KO WT
 
 ```{r,fig.width=9,fig.height=7}
 EnhancedVolcano(
-  deg_oe_wt,
+  deg_ko_wt,
   lab = rownames(deg_ko_wt),
   x = 'logFC',
   y = 'FDR',
@@ -579,7 +450,7 @@ EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (PCV)',
+  title = 'KO vs WT (HEV)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -630,7 +501,7 @@ EnhancedVolcano(
   labSize = 4.0,
   selectLab = goi,                     # <-- highlight these genes
   #col = c('grey30','grey30','royalblue','red2'),
-  title = 'KO vs WT (PCV)',
+  title = 'KO vs WT (HEV)',
   subtitle = 'Madcam1, St6gal1',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -652,57 +523,4 @@ EnhancedVolcano(
 #   caption = 'Right = Upregulated | Left = Downregulated',
 #   legendPosition = 'right'
 # )
-```
-
-
-GO for KO vs WT
-
-
-```{r}
-# Significant DE genes
-sig_deg <- deg_ko_wt %>% 
-  filter(FDR < 0.05) 
-
-# Up and down separately (optional)
-up_deg <- sig_deg %>% filter(logFC > 0)
-down_deg <- sig_deg %>% filter(logFC < 0)
-
-# 
-# library(AnnotationDbi)
-# 
-# library(org.Mm.eg.db)
-# library(clusterProfiler)
-
-gene_symbols <- rownames(sig_deg)
-
-entrez_ids <- bitr(
-  gene_symbols,
-  fromType = "SYMBOL",
-  toType = "ENTREZID",
-  OrgDb = org.Mm.eg.db
-)
-
-sig_deg_entrez <- sig_deg %>% 
-  mutate(SYMBOL = rownames(sig_deg)) %>%
-  inner_join(entrez_ids, by = "SYMBOL")
-
-
-ego_bp <- enrichGO(
-  gene          = sig_deg_entrez$ENTREZID,
-  OrgDb         = org.Mm.eg.db,
-  keyType       = "ENTREZID",
-  ont           = "BP",
-  pAdjustMethod = "fdr",
-  pvalueCutoff  = 0.05,
-  readable      = TRUE
-)
-
-head(ego_bp)
-
-```
-
-```{r, fig.height=9, fig.width=14}
-barplot(ego_bp, showCategory = 20)
-dotplot(ego_bp, showCategory = 20)
-
 ```
