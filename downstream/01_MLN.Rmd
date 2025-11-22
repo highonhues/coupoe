@@ -165,10 +165,72 @@ seu <- merge(
 ```
 
 ```{r}
+#library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 6,
+                     height = 6,
+                     dpi = 600) {
+
+  
+
+  # ---- SAVE PDF ----
+  ggsave(
+    filename = file.path(fig_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # ---- SAVE PNG ----
+  CairoPNG(
+    filename = file.path(fig_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot)    # this renders patchwork/Seurat correctly
+  dev.off()
+
+  return(plot)   # so you still see it in the RMarkdown output
+}
+
+
+```
+
+
+
+```{r, fig.height=6,fig.width=7}
 #Features above 6000 might be doublets ngl no but hevs have v high transcription
-FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+
+p <- FeatureScatter(
+  seu,
+  feature1 = "nCount_RNA",
+  feature2 = "nFeature_RNA",
+  group.by = "genotype"
+) +
+  plot_annotation(
+    title = "MLN: UMIs vs Genes",
+    theme = theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 18,
+        face = "bold"
+      )
+    )
+  )
+
+p
   #+ ggtitle("QC: UMIs vs Genes")
 ```
+```{r}
+save_pub(plot=p,  filename= "MLN_UMIs_vs_Genes", width=7, height=6)
+```
+
+
 ```{r}
 ncol(seu)
 ```
