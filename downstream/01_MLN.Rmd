@@ -5,3 +5,445 @@ date: "2025-11-22"
 output: html_document
 ---
 
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(Cairo)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(parallelly)
+library(glue)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+library(future)
+plan(multicore, workers = 8)
+
+
+#for parallelization
+options(future.globals.maxSize = 8000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "MLN_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "MLN_rds")
+fig_dir  <- file.path(base_dir, "MLN_figs")
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+ saving a fig ggsave(
+  filename = file.path(fig_dir, "cluster_umap.png"),
+  plot = p,
+  width = 6,
+  height = 5,
+  dpi = 300
+)
+
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_all_reps.rds")
+)
+
+
+p <- ggplot(mtcars, aes(mpg, wt)) + geom_point()
+
+ggsave(
+  filename = file.path(fig_dir, "myplot.pdf"),
+  plot = p,
+  device = CairoPDF,
+  width = 6,
+  height = 4,
+  units = "in"
+)
+
+1 of ko,oe,wt,crectrl
+
+```{r}
+samples_df <- read.csv("samples_MLN.csv",header=TRUE, stringsAsFactors = FALSE) #gsub works on chr
+
+samples_df$SampleName <- gsub("_", "-", samples_df$SampleName)
+
+#fix path for windows
+samples_df$Path <- trimws(samples_df$Path) #white space
+samples_df$Path <-  normalizePath(samples_df$Path, winslash="/")#,mustWork = FALSE)
+
+
+#setnames(values,namestoset)
+datadirs <- setNames(samples_df[,4], samples_df[,1])
+
+print(samples_df)
+print(datadirs)
+
+```
+
+```{r}
+seurat_list <- list()
+
+for(i in 1:nrow(samples_df)) {
+  sample_name <- samples_df$SampleName[i] #file names
+  sample_group <- samples_df$SampleGroup[i] #genotype
+  data_path <- samples_df$Path[i]
+  
+  cat("Processing:", sample_name, "\n")
+  
+  data <- Read10X(data.dir = data_path)
+  
+  #HTO data is multi output so it will be a list
+  if(is.list(data)) {
+    # For Cell Ranger multi output, extract only Gene Expression
+    gene_exp <- data$`Gene Expression`
+    cat("  - Multi output detected, using Gene Expression only\n")
+  } else {
+    # Regular output
+    gene_exp <- data
+    cat("  - Regular output\n")
+  }
+  
+  # Create Seurat object
+  seurat_obj <- CreateSeuratObject(
+    counts = gene_exp,
+    project = sample_name,
+    min.cells = 3,
+    min.features = 100
+  )
+  
+  #metadata
+  #seurat_obj$SampleName <- sample_name
+  seurat_obj$genotype <- sample_group
+  seurat_obj$site <- samples_df$Tissue[i]
+  seurat_obj$condition <- samples_df$Condition[i]
+  
+  #qc
+  seurat_obj$percent.mt <- PercentageFeatureSet(seurat_obj, pattern = "^mt-")
+
+  
+  # Store in list
+  seurat_list[[sample_name]] <- seurat_obj
+}
+
+```
+
+```{r}
+# Merge all objects into one Seurat object
+seu <- merge(
+  x = seurat_list[[1]],
+  y = seurat_list[2:length(seurat_list)],
+  add.cell.ids = names(seurat_list),
+  project = "mln_coup",merge.data = TRUE
+)
+```
+
+```{r}
+#Features above 6000 might be doublets ngl no but hevs have v high transcription
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+  #+ ggtitle("QC: UMIs vs Genes")
+```
+```{r}
+ncol(seu)
+```
+
+16467 cells
+
+```{r}
+table(seu$orig.ident)
+```
+
+COUPOE-MLN             COUPWT-MLN MLN-COUPKO-HT3-cre-neg MLN-COUPKO-HT5-cre-pos 
+                  9422                   6809                    105                    131 
+                  
+```{r}
+rm(seurat_obj)
+rm(seurat_list)
+```
+
+```{r,fig.width=12}
+df <- seu@meta.data
+df$sum <- seu$nCount_RNA
+df$detected <- seu$nFeature_RNA
+
+
+ggplot(df, aes(x = sum, y = detected)) +
+  geom_point(aes(colour = percent.mt > 10), alpha = 0.7, size = 1) +
+  facet_wrap(vars(genotype)) +
+  scale_color_manual(
+    values = c("FALSE" = "coral", "TRUE" = "turquoise3"),
+    labels = c("FALSE" = "≤10%", "TRUE" = ">10%")
+  ) +
+  labs(
+    title = "QC: Detected genes vs total counts per Peyer's Patches Sample",
+    x = "Total counts per cell",
+    y = "Detected genes per cell",
+    colour = "Mitochondrial %"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    strip.text = element_text(face = "bold")
+  )
+
+```
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+              pt.size = 0,
+              ncol = 3) #+ ggtitle("Before QC")
+
+```
+```{r}
+#cleaning
+seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10 & nFeature_RNA< 25000)
+```
+
+```{r}
+rm(seurat_list)
+```
+
+
+```{r,fig.width=10, fig.height=4}
+p <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+              pt.size = 0,
+              ncol = 3)  
+
+p + plot_annotation(
+    title = "MLN data After QC",
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, size = 18, face = "bold")
+    )
+)
+
+# ---- SAVE AS PDF ----
+ggsave(
+  filename = file.path(fig_dir, "MLN data After QC.pdf"),
+  plot = p,
+  device = CairoPDF,
+  width = 10,
+  height = 4,
+  units = "in"
+)
+
+# SAFEST WAY TO SAVE PNG ON WINDOWS
+CairoPNG(
+  filename = file.path(fig_dir, "MLN_data_After_QC.png"),
+  width = 10 * 600,     # width in pixels (10 inches × 600 dpi)
+  height = 4 * 600,     # height in pixels
+  res = 600
+)
+print(p)        # <<--- VERY IMPORTANT for patchwork/ggplots
+dev.off()
+```
+
+```{r}
+ncol(seu) #22643
+table(seu$orig.ident)
+```
+ COUPOE-MLN             COUPWT-MLN MLN-COUPKO-HT3-cre-neg MLN-COUPKO-HT5-cre-pos 
+                  9116                   6747                    103                    128 
+
+```{r}
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu, nfeatures = 3000,verbose=F)
+seu <- ScaleData(seu, verbose=F)
+seu <- RunPCA(seu)
+```
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,features=VariableFeatures(seu), new.reduction = "integrated.mnn",verbose = TRUE)
+```
+
+
+```{r}
+seu <- JoinLayers(seu)
+```
+
+```{r}
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "mln_int_join_layers.rds")) # just in case
+#   
+#   
+# # Load it back
+# #seu <- readRDS(file.path(rds_dir, "pp_int_join_layers.rds"))
+```
+
+First Lets do a diagnostic resolution study
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "pp_int_join_layers.rds"))
+```
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+#seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
+
+#seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+```
+
+```{r}
+#Diagnostic Resolution
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
+
+```
+
+```{r}
+seu_obj@graphs
+```
+
+
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+stick to 0.3 02_PP
+
+
+
+```{r,fig.height=15,fig.width=7}
+Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+```
+
+uhh wth
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# https://github.com/FrancisCrickInstitute/snRNAseq_workflow/blob/dabf3d87226ef9e9d51b12689c05a515cd1f0abc/templates/integrating_mnn.rmd
+DefaultAssay(seu) <- "mnn.reconstructed"
+```
+
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+ 
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+ 
+```
+ 
+```{r}
+seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
+
+seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+```
+
+```{r}
+ElbowPlot(seu, ndims=50)
+```
+ 
+```{r}
+# saveRDS(
+#   object = seu,
+#   file = file.path(rds_dir, "pp_int_post_scaling.rds")) # just in case
+#   
+#   
+# # Load it back
+# #seu <- readRDS(file.path(rds_dir, "pp_int_post_scaling.rds"))
+```
+ 
+```{r}
+seu <- readRDS(file.path(rds_dir, "pp_int_post_scaling.rds"))
+```
+
+
+Rigght now I just need to see if the effect works but basically later on you switch to the integrated and do the steps in 02.1 rmd. def assay is mnn and scale and pca and use that pca in the find neighbours stuff and
+```{r}
+seu
+```
+
+```{r}
+head(seu@meta.data)
+```
+```{r}
+#DefaultAssay(seu) #<- "mnn.reconstructed" #yahi tha
+```
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+```
+
+
+```{r}
+seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
+```
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+```
+
+
+```{r}
+DimPlot(seu, reduction = "umap.mnn", group.by = c("condition", "seurat_clusters"))
+```
+
+
+```{r,fig.width=10,fig.height=5}
+DimPlot(seu, reduction = "umap.mnn", split.by = "condition")
+```
+
+
+```{r,fig.width=10,fig.height=10}
+DimPlot(seu, reduction = "umap.mnn", split.by = "orig.ident", ncol=3, label =T)
+```
+```{r}
+ggplot(seu@meta.data) +
+    geom_bar(aes(x=orig.ident, fill=condition),
+             stat="count", color="black") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
+    labs(x="Sample name", y="Number of cells")
+
+```
+
+
