@@ -168,8 +168,8 @@ seu <- merge(
 #library(Cairo)
 save_pub <- function(plot,
                      filename,
-                     width = 6,
-                     height = 6,
+                     width = 7,
+                     height = 7,
                      dpi = 600) {
 
   
@@ -255,7 +255,7 @@ df$sum <- seu$nCount_RNA
 df$detected <- seu$nFeature_RNA
 
 
-ggplot(df, aes(x = sum, y = detected)) +
+p <- ggplot(df, aes(x = sum, y = detected)) +
   geom_point(aes(colour = percent.mt > 10), alpha = 0.7, size = 1) +
   facet_wrap(vars(genotype)) +
   scale_color_manual(
@@ -263,7 +263,7 @@ ggplot(df, aes(x = sum, y = detected)) +
     labels = c("FALSE" = "≤10%", "TRUE" = ">10%")
   ) +
   labs(
-    title = "QC: Detected genes vs total counts per Peyer's Patches Sample",
+    title = "QC: Detected genes vs total counts per MLN Sample",
     x = "Total counts per cell",
     y = "Detected genes per cell",
     colour = "Mitochondrial %"
@@ -273,18 +273,36 @@ ggplot(df, aes(x = sum, y = detected)) +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_text(face = "bold")
   )
-
+p
+save_pub(plot=p,  filename= "genes_tot_count_mln", width=12, height=7)
 ```
 
 ```{r,fig.width=10, fig.height=4}
-VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+p <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
               pt.size = 0,
-              ncol = 3) #+ ggtitle("Before QC")
+              ncol = 3) +
+  plot_annotation(
+    title = "MLN: Before QC",
+    theme = theme(
+      plot.title = element_text(
+        hjust = 0.5,
+        size = 18,
+        face = "bold"
+      )
+    )
+  )
 
+p
 ```
+
+```{r}
+save_pub(plot=p,  filename= "beforeqc_mln", width=10, height=4)
+```
+
+
 ```{r}
 #cleaning
-seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10 & nFeature_RNA< 25000)
+seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10 & nCount_RNA < 30000)
 ```
 
 ```{r}
@@ -306,7 +324,7 @@ p + plot_annotation(
 
 # ---- SAVE AS PDF ----
 ggsave(
-  filename = file.path(fig_dir, "MLN data After QC.pdf"),
+  filename = file.path(fig_dir, "MLN_data_After_QC.pdf"),
   plot = p,
   device = CairoPDF,
   width = 10,
@@ -324,6 +342,9 @@ CairoPNG(
 print(p)        # <<--- VERY IMPORTANT for patchwork/ggplots
 dev.off()
 ```
+```{r}
+save_pub(plot=p,  filename= "MLN_data_After_QC", width=10, height=4)
+```
 
 ```{r}
 ncol(seu) #22643
@@ -340,7 +361,19 @@ seu <- RunPCA(seu)
 ```
 
 ```{r}
-seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,features=VariableFeatures(seu), new.reduction = "integrated.mnn",verbose = TRUE)
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_mln_gen_pca.rds"))
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_pp_gen_pca.rds"))
+```
+
+
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, new.reduction = "integrated.mnn",verbose = TRUE)
 ```
 
 
@@ -361,8 +394,14 @@ saveRDS(
 First Lets do a diagnostic resolution study
 
 ```{r}
-seu <- readRDS(file.path(rds_dir, "pp_int_join_layers.rds"))
+#seu <- readRDS(file.path(rds_dir, "pp_int_join_layers.rds"))
 ```
+
+```{r}
+ElbowPlot(seu)
+```
+
+
 
 
 ```{r}
