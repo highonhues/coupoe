@@ -526,17 +526,31 @@ saveRDS(
 #seu <- readRDS(file.path(rds_dir, "seu_mln_int_fin.rds"))
 ```
 
+```{r, fig.height=8, fig.width=12}
+
+p <- DimPlot(seu, group.by="seurat_clusters", split.by = "condition",ncol=2, label =T) 
+p <- p+ ggtitle("Viewing Cells in each cluster Split By Condition") +
+  theme(plot.title = element_text(hjust = 0.5))
+p
+```
+```{r}
+save_pub(plot=p, filename="mln_splitby_cond", width= 12, height=8)
+```
+
 
 ```{r}
-ggplot(seu@meta.data) +
+p <- ggplot(seu@meta.data) +
     geom_bar(aes(x=orig.ident, fill=condition),
              stat="count", color="black") +
     theme_classic() +
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
     labs(x="Sample name", y="Number of cells")
-
+p
 ```
 
+```{r}
+save_pub(plot=p,filename= "mln_number_of_cells_viz")
+```
 
 {r Find best cluster resolution,fig.height=8,fig.width=10}
 
@@ -562,9 +576,6 @@ Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_
 Contaminant removal here
 
 
-
-
-
 ```{r}
 
 #Contaminants
@@ -574,4 +585,156 @@ fib_ret <- c("Pdpn","Ccl19","Pdgfra")
 
 ```
 
+
+```{r}
+modules <- list(
+  LEC = lec,
+  Lymphocyte = lymphocytes,
+  FRC = fib_ret
+)
+
+```
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+seu <- AddModuleScore(seu, features = modules)
+
+```
+
+```{r}
+#Rename
+old <- c("Cluster1", "Cluster2", "Cluster3")
+new <- c("LEC", "Lymphocyte", "FRC")
+
+colnames(seu@meta.data)[match(old, colnames(seu@meta.data))] <- new
+
+```
+
+```{r}
+head(seu@meta.data)
+```
+
+
+
+```{r,fig.height=7,fig.width=8}
+FeaturePlot(seu, features = c("LEC", "Lymphocyte", "FRC"),label=T,
+            #cols = c("lightgrey", "red"),  # optional: nice contrast
+            reduction = "umap.mnn")
+
+```
+
+Okay so we will do module score removal and then I will redo this contaminant removal analysis
+
+```{r}
+table(seu$orig.ident)
+```
+```{r,fig.width=12,fig.height=4}
+p <- VlnPlot(
+  seu,
+  features = c("LEC", "Lymphocyte", "FRC"),
+  group.by = "seurat_clusters",
+  pt.size = 0
+)
+p <- p + plot_annotation(
+    title = "MLN Contaminant Removal Analysis",
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, size = 15, face = "bold")
+    )
+)
+
+p
+```
+
+```{r}
+save_pub(plot=p,  filename= "mln_Contaminant_removal_process", width=12, height=4)
+```
+
+So we can see that cluster 2 and 3 are lec and lec/frc respectively and 8 is lymphocyte but I will be a little conservative in my module score removal. We will obviously subset and remove.
+
+```{r}
+modules <- c("LEC", "Lymphocyte", "FRC")
+thresholds <- c(0.6, 0.1, 0.1)   # example
+
+plot_list <- list()
+
+for (i in seq_along(modules)) {
+    feat <- modules[i]
+    thr <- thresholds[i]
+    
+    df <- data.frame(score = seu@meta.data[[feat]])
+    
+    p <- ggplot(df, aes(x = score)) +
+        geom_histogram(bins = 60, fill = "lightgrey", color = "black") +
+        geom_vline(xintercept = thr, color = "red", size = 1.2) +
+        ggtitle(paste0("Histogram of MLN ", feat, " Score (Thr = ", thr, ")")) +
+        theme_bw() +
+        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+    
+    plot_list[[i]] <- p
+}
+
+
+wrap_plots(plot_list, ncol = 1)
+
+```
+
+
+```{r}
+p <- wrap_plots(plot_list, ncol = 1)
+```
+
+
+```{r}
+save_pub(
+  plot = p,
+  filename = "module_histograms_mln"
+)
+
+```
+
+
+```{r}
+#keep cells that have a low score on these
+seu <- subset(
+  seu,
+  subset = (LEC < 0.6) & (Lymphocyte < 0.1) & (FRC < 0.1))
+
+```
+
+```{r}
+table(seu$orig.ident)
+```
+COUPOE-MLN             COUPWT-MLN MLN-COUPKO-HT3-cre-neg MLN-COUPKO-HT5-cre-pos 
+                  7264                   5407                     81                    110 
+
+```{r, fig.height=8, fig.width=12}
+
+p <- DimPlot(seu, group.by="seurat_clusters", split.by = "condition",ncol=2, label =T) 
+p <- p+ ggtitle("Viewing Cells in each cluster Split By Condition Post Module Removal") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+
+```{r}
+save_pub(plot=p, filename= "Cond_cluster_split_post_modules_subset",width=12,height=8)
+```
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_mln_subset.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_mln_subset.rds"))
+```
+
+
+
+
+```{r}
+
+```
 
