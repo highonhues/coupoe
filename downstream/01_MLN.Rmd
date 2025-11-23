@@ -425,7 +425,7 @@ seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, 
 seu <- ScaleData(seu, vars.to.regress = c("S.Score", "G2M.Score"))
 ```
 
-check karo does cell cell effect get removed? THEY DOOOO WHATTTT
+check karo does cell cell effect get removed? THEY DOOOO
 
 
 ```{r}
@@ -437,13 +437,17 @@ DimPlot(seu_obj,group.by ="Phase" )
 
 ```{r}
 p <- DimPlot(seu_obj,group.by ="Phase" )
-# p + plot_annotation(
-#     title = "MLN Cell Cycle Effects Removed",
-#     theme = theme(
-#       plot.title = element_text(hjust = 0.5, size = 15, face = "bold")
-#     )
-# )
+p <- p + plot_annotation(
+    title = "MLN Cell Cycle Effects Removed",
+    theme = theme(
+      plot.title = element_text(hjust = 0.5, size = 15, face = "bold")
+    )
+)
 
+```
+
+```{r}
+save_pub(plot=p,  filename= "mln_cc_removed", width=7, height=6)
 ```
 
 
@@ -471,25 +475,57 @@ saveRDS(
 
 
 ```{r}
-seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
-
-seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
-
+#Taking from menglan
+seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
 
 ```
 
 
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_umap_ran_mln.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_umap_ran_mln.rds"))
+```
 
 
 ```{r}
 #Diagnostic Resolution
-seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.8, by=0.1))
 
 ```
+
+I can see from the output above that the resolution I need is 0.3 so gonna use that.
+
+
 
 ```{r}
 seu_obj@graphs
 ```
+```{r}
+rm(seu_obj)
+```
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+```
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_mln_int_fin.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_mln_int_fin.rds"))
+```
+
 
 ```{r}
 ggplot(seu@meta.data) +
@@ -502,8 +538,7 @@ ggplot(seu@meta.data) +
 ```
 
 
-
-```{r Find best cluster resolution,fig.height=8,fig.width=10}
+{r Find best cluster resolution,fig.height=8,fig.width=10}
 
 p <- clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
   theme(
@@ -513,44 +548,18 @@ p <- clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj
     )
   )
 p
-```
 
-```{r}
+
+
 save_pub(plot=p,  filename= "MLN_Cluster_determ", width=10, height=8)
-```
 
-```{r,fig.height=15,fig.width=7}
+
+
+r,fig.height=15,fig.width=7
 Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
-```
 
-lets go with 0.3
-```{r}
-seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
-```
-```{r}
-rm(seu_obj)
-```
 
-```{r}
-# View resuts
-p <- DimPlot(seu, group.by="seurat_clusters") 
-#p <- LabelClusters(p, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
-#p <- p+ ggtitle("Initial Integration for MLN") + theme(plot.title = element_text(hjust = 0.5))
-```
-
-```{r}
-save_pub(plot=p,  filename= "MLN_init_int_no_label", width=7, height=7)
-```
-
-```{r,fig.width=9,fig.height=9}
-p <- DimPlot(seu, reduction = "umap.mnn", split.by = "condition", ncol =2)
-save_pub(plot=p,  filename= "MLN_umap,split_by_cond", width=9, height=9)
-```
-
-```{r}
-
-```
-
+Contaminant removal here
 
 
 
@@ -563,67 +572,6 @@ lec <- c("Prox1","Lyve1","Pdpn")
 lymphocytes <- c("Ptprc","Cd52")
 fib_ret <- c("Pdpn","Ccl19","Pdgfra")
 
-```
-
-
-
-
-
-
-```{r}
-# https://github.com/FrancisCrickInstitute/snRNAseq_workflow/blob/dabf3d87226ef9e9d51b12689c05a515cd1f0abc/templates/integrating_mnn.rmd
-DefaultAssay(seu) <- "mnn.reconstructed"
-```
-
-```{r}
-s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
-g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
- 
-seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
- 
-```
- 
-```{r}
-seu$CC.Difference <- seu$S.Score - seu$G2M.Score
-seu <- ScaleData(seu, vars.to.regress = "CC.Difference")
-
-seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
-```
-
-```{r}
-ElbowPlot(seu, ndims=50)
-```
- 
-```{r}
-# saveRDS(
-#   object = seu,
-#   file = file.path(rds_dir, "pp_int_post_scaling.rds")) # just in case
-#   
-#   
-# # Load it back
-# #seu <- readRDS(file.path(rds_dir, "pp_int_post_scaling.rds"))
-```
- 
-```{r}
-seu <- readRDS(file.path(rds_dir, "pp_int_post_scaling.rds"))
-```
-
-
-Rigght now I just need to see if the effect works but basically later on you switch to the integrated and do the steps in 02.1 rmd. def assay is mnn and scale and pca and use that pca in the find neighbours stuff and
-```{r}
-seu
-```
-
-```{r}
-head(seu@meta.data)
-```
-```{r}
-#DefaultAssay(seu) #<- "mnn.reconstructed" #yahi tha
-```
-
-
-```{r}
-seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
 ```
 
 
