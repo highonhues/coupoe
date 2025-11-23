@@ -731,6 +731,122 @@ saveRDS(
 #seu <- readRDS(file.path(rds_dir, "seu_mln_subset.rds"))
 ```
 
+```{r}
+seu
+```
+An object of class Seurat 
+22053 features across 12862 samples within 2 assays 
+Active assay: RNA (19053 features, 3000 variable features)
+ 3 layers present: data, counts, scale.data
+ 1 other assay present: mnn.reconstructed
+ 3 dimensional reductions calculated: pca, integrated.mnn, umap.mnn
+
+Now we integrate again!
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+
+seu <- NormalizeData(seu)
+seu <- FindVariableFeatures(seu, nfeatures = 3000)
+
+#cellcycle
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+#Correcting by cc diff and viewing its effect
+#This will rewrite the scale data
+#seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+
+seu <- ScaleData(seu,assay="RNA", vars.to.regress = c("S.Score", "G2M.Score"))
+#seu <- ScaleData(seu,assay="RNA", vars.to.regress = "CC.Difference")
+
+seu <- RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+
+```
+
+
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_mln_subset_after_scale.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_mln_subset_after_scale.rds"))
+```
+
+okay again i do wanna see if I have cell cycle removal? ah well expected anyway
+
+
+```{r}
+
+seu_obj <- RunPCA(seu, features = c(s.genes, g2m.genes))
+DimPlot(seu_obj,group.by ="Phase" )
+```
+
+```{r}
+rm(seu_obj)
+```
+
+
+```{r}
+seu[["RNA"]] <- split(
+  seu[["RNA"]],
+  f = seu$orig.ident
+)
+
+```
+
+
+```{r}
+#batch=seu$orig.ident,
+seu <- IntegrateLayers(seu, method = FastMNNIntegration,
+                       features=VariableFeatures(seu),
+                       new.reduction = "integrated.mnn",
+                       verbose = TRUE)
+```
+```{r}
+seu <- JoinLayers(seu)
+```
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
+```
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_mln_subset_after_umap.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_mln_subset_after_umap.rds"))
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+```{r}
+
+```
+
+
+
 
 
 
