@@ -370,10 +370,15 @@ saveRDS(
 #seu <- readRDS(file.path(rds_dir, "seu_pp_gen_pca.rds"))
 ```
 
+```{r}
+
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_mln_gen_pca.rds"))
+```
 
 
 ```{r}
-seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident, new.reduction = "integrated.mnn",verbose = TRUE)
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,features=VariableFeatures(seu), new.reduction = "integrated.mnn",verbose = TRUE)
 ```
 
 
@@ -394,23 +399,87 @@ saveRDS(
 First Lets do a diagnostic resolution study
 
 ```{r}
-#seu <- readRDS(file.path(rds_dir, "pp_int_join_layers.rds"))
+#seu <- readRDS(file.path(rds_dir, "mln_int_join_layers.rds"))
 ```
 
 ```{r}
-ElbowPlot(seu)
+ElbowPlot(seu, ndims= 50)
+```
+
+```{r}
+# https://github.com/FrancisCrickInstitute/snRNAseq_workflow/blob/dabf3d87226ef9e9d51b12689c05a515cd1f0abc/templates/integrating_mnn.rmd
+DefaultAssay(seu) <- "mnn.reconstructed"
 ```
 
 
+```{r}
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=F) #set in the meta.data col phase
+
+```
+
+
+```{r}
+seu <- ScaleData(seu, vars.to.regress = c("S.Score", "G2M.Score"))
+```
+
+check karo does cell cell effect get removed? THEY DOOOO WHATTTT
+
+
+```{r}
+# when running a PCA on cell cycle genes, actively proliferating cells remain distinct from G1
+# cells however, within actively proliferating cells, G2M and S phase cells group together
+seu_obj <- RunPCA(seu, features = c(s.genes, g2m.genes))
+DimPlot(seu_obj,group.by ="Phase" )
+```
+
+```{r}
+p <- DimPlot(seu_obj,group.by ="Phase" )
+# p + plot_annotation(
+#     title = "MLN Cell Cycle Effects Removed",
+#     theme = theme(
+#       plot.title = element_text(hjust = 0.5, size = 15, face = "bold")
+#     )
+# )
+
+```
+
+
+```{r}
+rm(seu_obj)
+```
+
+
+```{r}
+seu <- Seurat::RunPCA(seu, npcs = ifelse(ncol(seu) <= 50, ncol(seu) - 1, 50))
+```
+
+
+
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_3k_mnn_pca_mln.rds")) # just in case
+  
+  
+# Load it back
+#seu <- readRDS(file.path(rds_dir, "seu_3k_mnn_pca_mln.rds"))
+```
 
 
 ```{r}
 seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
-#seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+
 seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, reduction.name = "umap.mnn")
 
-#seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
+
 ```
+
+
+
 
 ```{r}
 #Diagnostic Resolution
@@ -422,36 +491,79 @@ seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
 seu_obj@graphs
 ```
 
+```{r}
+ggplot(seu@meta.data) +
+    geom_bar(aes(x=orig.ident, fill=condition),
+             stat="count", color="black") +
+    theme_classic() +
+    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
+    labs(x="Sample name", y="Number of cells")
+
+```
+
+
 
 ```{r Find best cluster resolution,fig.height=8,fig.width=10}
 
-clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+p <- clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
   theme(
     plot.title = element_text(
       hjust = 0.5,       # centers the title
       margin = margin(b = 12)  # adds space (bottom margin)
     )
   )
+p
 ```
-stick to 0.3 02_PP
 
-
+```{r}
+save_pub(plot=p,  filename= "MLN_Cluster_determ", width=10, height=8)
+```
 
 ```{r,fig.height=15,fig.width=7}
 Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
 ```
 
-uhh wth
+lets go with 0.3
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+```
+```{r}
+rm(seu_obj)
+```
+
+```{r}
+# View resuts
+p <- DimPlot(seu, group.by="seurat_clusters") 
+#p <- LabelClusters(p, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+#p <- p+ ggtitle("Initial Integration for MLN") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+save_pub(plot=p,  filename= "MLN_init_int_no_label", width=7, height=7)
+```
+
+```{r,fig.width=9,fig.height=9}
+p <- DimPlot(seu, reduction = "umap.mnn", split.by = "condition", ncol =2)
+save_pub(plot=p,  filename= "MLN_umap,split_by_cond", width=9, height=9)
+```
+
+```{r}
+
+```
 
 
 
 
 
 
+```{r}
 
+#Contaminants
+lec <- c("Prox1","Lyve1","Pdpn")
+lymphocytes <- c("Ptprc","Cd52")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
 
-
-
+```
 
 
 
@@ -512,39 +624,6 @@ head(seu@meta.data)
 
 ```{r}
 seu <- FindNeighbors(seu, reduction = "pca", dims = 1:30)
-```
-
-
-```{r}
-seu <- RunUMAP(seu, reduction = "pca", dims = 1:30, reduction.name = "umap.mnn")
-```
-
-```{r}
-seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
-```
-
-
-```{r}
-DimPlot(seu, reduction = "umap.mnn", group.by = c("condition", "seurat_clusters"))
-```
-
-
-```{r,fig.width=10,fig.height=5}
-DimPlot(seu, reduction = "umap.mnn", split.by = "condition")
-```
-
-
-```{r,fig.width=10,fig.height=10}
-DimPlot(seu, reduction = "umap.mnn", split.by = "orig.ident", ncol=3, label =T)
-```
-```{r}
-ggplot(seu@meta.data) +
-    geom_bar(aes(x=orig.ident, fill=condition),
-             stat="count", color="black") +
-    theme_classic() +
-    theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
-    labs(x="Sample name", y="Number of cells")
-
 ```
 
 
