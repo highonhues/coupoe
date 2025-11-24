@@ -324,14 +324,7 @@ pseudobulk_celltype <- function(
   assay_name = "RNA",
   seed = 1234
 ) {
-  # library(Seurat)
-  # library(SingleCellExperiment)
-  # library(dplyr)
-  # library(scran)
-  # library(scuttle)
-  # library(scater)
-  # library(limma)
-  # 
+  
   #----------------------
   # 1. Subset Seurat to that cell type
   #----------------------
@@ -390,7 +383,6 @@ pseudobulk_celltype <- function(
   pb <- logNormCounts(pb)
 
   
-  
   #----------------------
   # 8. Return everything
   #----------------------
@@ -404,6 +396,7 @@ pseudobulk_celltype <- function(
 ```{r}
 pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
 ```
+
 ```{r}
 pb_pcv
 #head(colData(pb_pcv))
@@ -469,6 +462,8 @@ pcv_dge$design
 cbind(pcv_dge$meta$pb_id, pcv_dge$meta$condition)
 
 ```
+
+# Differential Expression Testing
 #pos fc means genes are higher in oe/ko/front neg means higher in wt 
 ```{r}
 fit <- pcv_dge$fit
@@ -494,10 +489,10 @@ c_oe_ko <- makeContrasts(conditionOE - conditionKO, levels = design)
 res_oe_ko <- glmLRT(fit,contrast= c_oe_ko)
 deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
 # 
-# # 5. OE vs CRE_CTRL
-# c_oe_cc <- makeContrasts(conditionOE - conditionCRE_CTRL, levels = design)
-# res_oe_cc <- glmLRT(fit, contrast=c_oe_cc)
-# deg_oe_cc <- topTags(res_oe_cc, n = Inf)$table
+# 5. WT vs CRE_CTRL
+c_wt_cc <- makeContrasts(conditionWT - conditionCRE_CTRL, levels = design)
+res_wt_cc <- glmLRT(fit, contrast=c_wt_cc)
+deg_wt_cc <- topTags(res_wt_cc, n = Inf)$table
 # 
 # # 6. KO vs CRE_CTRL
 # c_ko_cc <- makeContrasts(conditionKO - conditionCRE_CTRL, levels = design)
@@ -507,20 +502,67 @@ deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
 
 ```
 
+
+OE WT
+
+log2fc = higher in oe, neg in wt, cpm is higher for more abundant gene, lr =test stat, bigger stronger evidence
+
 ```{r}
-deg_list <- list(
-  OE_vs_WT  = deg_oe_wt,
-  KO_vs_WT  = deg_ko_wt,
-  CC_vs_WT  = deg_cc_wt,
-  OE_vs_KO  = deg_oe_ko
-#   OE_vs_CC  = deg_oe_cc,
-#   KO_vs_CC  = deg_ko_cc
- )
+head(deg_oe_wt)
+```
+
+
+```{r}
+
+write.csv(deg_oe_wt,
+          file.path(celltype_dir, "deg_oe_wt.csv"),
+          row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_oe_wt %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
+[1] 773
+
+FALSE  TRUE 
+  377   396 
+
+```{r}
+#ibrary(dplyr)
+
+# Top 20 OE-upregulated genes
+top_up <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in OE)
+top_down <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_oe_wt_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_oe_wt_top20_down.csv"),
+          row.names = TRUE)
 
 ```
 
 
-OE WT
+
+
+
+GO enrichment using ORA
+take significant deg, convert to entrez id and check if the sig genes are over represented in GO (biological processes)
 
 ```{r}
 # Significant DE genes
@@ -645,30 +687,6 @@ EnhancedVolcano(
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
 )
-```
-
-```{r}
-#ibrary(dplyr)
-
-# Top 20 OE-upregulated genes
-top_up <- deg_ko_wt %>%
-  filter(FDR < 0.05, logFC > 0) %>%
-  arrange(desc(logFC)) %>% 
-  head(20)
-
-# Top 20 WT-upregulated genes (down in OE)
-top_down <- deg_ko_wt %>%
-  filter(FDR < 0.05, logFC < 0) %>%
-  arrange(logFC) %>% 
-  head(20)
-write.csv(top_up,
-          file.path(celltype_dir, "KO_vs_WT_top20_up.csv"),
-          row.names = TRUE)
-
-write.csv(top_down,
-          file.path(celltype_dir, "KO_vs_WT_top20_down.csv"),
-          row.names = TRUE)
-
 ```
 
 
