@@ -10,6 +10,7 @@ output: 05_PP_DGE
 library(Seurat)
 library(tidyverse)
 library(SeuratWrappers)
+library(Cairo)
 library(magicBatch)
 library(BPCells)
 library(batchelor)
@@ -75,6 +76,47 @@ dir.create(rds_dir, showWarnings = FALSE)
 dir.create(fig_dir, showWarnings = FALSE)
 ```
 
+
+```{r}
+#library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(celltype_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(celltype_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+
+```
+
+
+
+
 For differential expression analysis of a multi-sample single-cell experiment, pseudo-bulk methods outperform DE methods speciĄcally designed at the single-cell level in terms of both
 stability and computational speed [14].
 We explore the pseudo-bulk proĄles using a multi-dimensional scaling (MDS) plot. This visualizes the differences between the expression proĄles of different samples in two dimensions.
@@ -113,11 +155,24 @@ Before doing DGE, you should aggregate (combine) the expression values of cells 
 Lets start with HEV
 
 
-```{r,fig.width=14,fig.height=5}
-an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+```{r,fig.width=10,fig.height=9}
+an <- DimPlot(seu, split.by= "condition",group.by="cluster_annot",ncol=2) + ggtitle("Annotated Peyers Patches Split by Condition") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.8, bg.colour = "white", bg.r = .2, force = 0)
 ```
+
+
+```{r,fig.width=7,fig.height=5}
+an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.8, bg.colour = "white", bg.r = .2, force = 0)
+an
+```
+
+```{r}
+save_pub(plot=an, filename="PP_all_cell_annot", width = 7, height=5)
+```
+
 
 
 ```{r}
@@ -130,6 +185,9 @@ head(seu@meta.data)
 
 DotPlot(seu, features = c("Bgn","Ctsh","Selp","B4galt6","Sele","Ackr1","Cytl1","Gucy1a1","Icam1"), group.by = "cluster_annot")
 ```
+
+
+This is performing some dataset exploration before I form the functions
 
 
 ```{r}
@@ -252,6 +310,9 @@ ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
 table(sce$cluster_annot, sce$condition)
 
 ```
+
+
+
 
 Important to create cell type pseudobulk
 
