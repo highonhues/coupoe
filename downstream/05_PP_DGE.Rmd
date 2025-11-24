@@ -363,24 +363,29 @@ pseudobulk_celltype <- function(
   set.seed(seed)
   
   
-  meta <- meta %>%
+meta_out <- meta %>%
   group_by(orig.ident) %>%
-  mutate(
-    pseudo_rep = if_else(
-      orig.ident %in% oe_samples,
-      1L,   # OE → no pseudoreps
-      { 
-        # For CreCtrl, KO, WT → make 3 pseudoreps
-        .rand <- sample(seq_len(n()))
-        rep(1:n_pseudo, length.out = n())[order(.rand)]
-      }
-    )
-  ) %>%
+  do({
+    df <- .
+    
+    if (df$orig.ident[1] %in% oe_samples) {
+      # Assign pseudo_rep = position in oe_samples
+      rep_index <- match(df$orig.ident[1], oe_samples)
+      df$pseudo_rep <- rep_index
+    } else {
+      # Regular random pseudoreps for WT, KO, CRE_CTRL
+      df$.rand <- sample(seq_len(nrow(df)))
+      df$pseudo_rep <- rep(1:n_pseudo, length.out = nrow(df))[order(df$.rand)]
+    }
+    
+    df
+  }) %>%
   ungroup()
 
+  colData(sce)$pseudo_rep <- meta_out$pseudo_rep[match(colnames(sce), meta_out$cell)]
+
   
-  
-  colData(sce)$pseudo_rep <- meta$pseudo_rep[match(colnames(sce), meta$cell)]
+  #colData(sce)$pseudo_rep <- meta$pseudo_rep[match(colnames(sce), meta$cell)]
   
   #----------------------
   # 4. Make pseudobulk IDs
@@ -391,10 +396,9 @@ pseudobulk_celltype <- function(
   # )
   colData(sce)$pb_id <- ifelse(
     sce$orig.ident %in% oe_samples,
-    sce$orig.ident,   # OE stays OE1, OE2, OE3
-    paste0(sce$orig.ident, "_rep", sce$pseudo_rep) # others get reps
-  )
-  
+    paste0("OE_rep", sce$pseudo_rep),
+    paste0(sce$orig.ident, "_rep", sce$pseudo_rep))
+
   #----------------------
   # 5. Aggregate to pseudobulk
   #----------------------
@@ -451,13 +455,13 @@ dge_prepare <- function(pb) {
   
   # Metadata extraction
   meta <- as.data.frame(colData(pb)) %>%
-    dplyr::select(pb_id, condition, orig.ident)
+    dplyr::select(pb_id, condition, pseudo_rep)
   
   meta$condition <- factor(meta$condition)
-  meta$orig.ident <- factor(meta$orig.ident)
+  meta$pseudo_rep <- factor(meta$pseudo_rep)
   
   # Design matrix (no intercept)
-  design <- model.matrix(~ 0 + condition , data = meta)
+  design <- model.matrix(~ 0 + condition + pseudo_rep , data = meta)
   
   # Build DGEList using raw pseudobulk counts
   y <- DGEList(
@@ -490,7 +494,7 @@ dge_prepare <- function(pb) {
 ```
 
 ```{r}
-pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
+#pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
 pcv_dge <- dge_prepare(pb_pcv)
 
 
@@ -567,10 +571,10 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 773
+[1] 499
 
 FALSE  TRUE 
-  377   396 
+  232   267 
 
 ```{r}
 #ibrary(dplyr)
@@ -834,10 +838,10 @@ table(sig_genes$logFC > 0)
 # TRUE (up in OE): xxx
 ```
 
-[1] 1429
+[1] 1420
 
 FALSE  TRUE 
-  666   763 
+  681   739 
   
   
 ```{r}
@@ -1046,7 +1050,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment (OE vs WT)",
+    title = "ETS-related enrichment (KO vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS / ERG / ELK / ETV target sets",
     size = "-log10(FDR)"
