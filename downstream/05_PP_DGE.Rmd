@@ -116,6 +116,9 @@ save_pub <- function(plot,
 
 ```
 
+```{r}
+table(seu$orig.ident)
+```
 
 
 
@@ -324,6 +327,7 @@ pseudobulk_celltype <- function(
   celltype, 
   n_pseudo = 3,
   assay_name = "RNA",
+  oe_samples = c("COUPOE-PP-POS1", "COUPOE-PP1", "COUPOE-PP2"),
   seed = 1234
 ) {
   
@@ -342,24 +346,53 @@ pseudobulk_celltype <- function(
   #----------------------
   # 3. Create pseudoreplicates per orig.ident
   #----------------------
+  # set.seed(seed)
+  # meta <- as.data.frame(colData(sce)) %>%
+  #   mutate(cell = colnames(sce)) %>%
+  #   group_by(orig.ident) %>%
+  #   mutate(
+  #     .rand = sample(seq_len(n())),
+  #     pseudo_rep = rep(1:n_pseudo, length.out = n())[order(.rand)]
+  #   ) %>%
+  #   ungroup()
+  #
+  
+  meta <- as.data.frame(colData(sce))
+  meta$cell <- rownames(meta)
+  
   set.seed(seed)
-  meta <- as.data.frame(colData(sce)) %>%
-    mutate(cell = colnames(sce)) %>%
-    group_by(orig.ident) %>%
-    mutate(
-      .rand = sample(seq_len(n())),
-      pseudo_rep = rep(1:n_pseudo, length.out = n())[order(.rand)]
-    ) %>%
-    ungroup()
+  
+  
+  meta <- meta %>%
+  group_by(orig.ident) %>%
+  mutate(
+    pseudo_rep = if_else(
+      orig.ident %in% oe_samples,
+      1L,   # OE → no pseudoreps
+      { 
+        # For CreCtrl, KO, WT → make 3 pseudoreps
+        .rand <- sample(seq_len(n()))
+        rep(1:n_pseudo, length.out = n())[order(.rand)]
+      }
+    )
+  ) %>%
+  ungroup()
+
+  
   
   colData(sce)$pseudo_rep <- meta$pseudo_rep[match(colnames(sce), meta$cell)]
   
   #----------------------
   # 4. Make pseudobulk IDs
   #----------------------
-  colData(sce)$pb_id <- with(
-    colData(sce),
-    paste(orig.ident, paste0("rep", pseudo_rep), sep = "_")
+  # colData(sce)$pb_id <- with(
+  #   colData(sce),
+  #   paste(orig.ident, paste0("rep", pseudo_rep), sep = "_")
+  # )
+  colData(sce)$pb_id <- ifelse(
+    sce$orig.ident %in% oe_samples,
+    sce$orig.ident,   # OE stays OE1, OE2, OE3
+    paste0(sce$orig.ident, "_rep", sce$pseudo_rep) # others get reps
   )
   
   #----------------------
@@ -374,7 +407,8 @@ pseudobulk_celltype <- function(
       pseudo_rep = sce$pseudo_rep
     )
   )
-  
+  colnames(pb) <- pb$pb_id
+
   # Save raw counts
   assay(pb, "counts_raw") <- assay(pb, "counts")
   pb$libsize <- colSums(assay(pb, "counts_raw"))
@@ -396,12 +430,15 @@ pseudobulk_celltype <- function(
 ```
 
 ```{r}
-#pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
+pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
 ```
 
 ```{r}
-pb_pcv
+#pb_pcv
 #head(colData(pb_pcv))
+colnames(pb_pcv)
+as.data.frame(colData(pb_pcv))[ , c("orig.ident", "condition", "pseudo_rep")]
+pb_pcv$libsize
 
 ```
 
@@ -701,7 +738,7 @@ head(ego_bp)
 b <- barplot(ego_bp, showCategory = 20)
 d <- dotplot(ego_bp, showCategory = 20)
 save_pub(plot =b, filename="barplot_GO_deg_oe_wt", width=14, height=9)
-save_pub(plot =d, filename="dotplot_GO_deg_oe_wt",, width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_oe_wt", width=14, height=9)
 ```
 
 
@@ -797,9 +834,41 @@ table(sig_genes$logFC > 0)
 # TRUE (up in OE): xxx
 ```
 
+[1] 1429
+
+FALSE  TRUE 
+  666   763 
+  
+  
+```{r}
+#ibrary(dplyr)
+
+# Top 20 ko-upregulated genes
+top_up <- deg_ko_wt %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in ko)
+top_down <- deg_ko_wt %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_ko_wt_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_ko_wt_top20_down.csv"),
+          row.names = TRUE)
+
+```
+
+viz
+
 ```{r,fig.width=9,fig.height=7}
-EnhancedVolcano(
-  deg_oe_wt,
+p <- EnhancedVolcano(
+  deg_ko_wt,
   lab = rownames(deg_ko_wt),
   x = 'logFC',
   y = 'FDR',
@@ -813,50 +882,63 @@ EnhancedVolcano(
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
 )
+p
+save_pub(plot=p,filename= "deg_ko_wt_EVplot", width = 9,height=7)
 ```
 
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",           "Selp", "Vcam1", "Glycam1", "Icam1")
+         #addressin                 #tf                                  #general pcv/hev genes
 
-
-```{r,fig.width=9,fig.height=7}
-
-#goi <- c("Glycam1", "Ccl21a", "Selp", "Sele", "Vcam1", "Ackr1")   # example
-goi <- c("Madcam1", "St6gal1") 
-
-
-
-EnhancedVolcano(
+p <- EnhancedVolcano(
   deg_ko_wt,
   lab = rownames(deg_ko_wt),
   x = 'logFC',
   y = 'FDR',
   pCutoff = 0.05,
   FCcutoff = 1.2,
-  pointSize = 2.0,
-  labSize = 4.0,
-  selectLab = goi,                     # <-- highlight these genes
-  #col = c('grey30','grey30','royalblue','red2'),
-  title = 'KO vs WT (PCV)',
-  subtitle = 'Madcam1, St6gal1',
-  caption = 'Right = Upregulated | Left = Downregulated',
-  legendPosition = 'right'
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'KO vs WT - Adhesion Molecules'
 )
 
+save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
+```
 
-# EnhancedVolcano(
-#   deg_oe_wt,
-#   lab = rownames(deg_oe_wt),
-#   x = 'logFC',
-#   y = 'FDR',
-#   pCutoff = 0.05,
-#   FCcutoff = 1.2,     # log2 fold change cutoff of ±1
-#   pointSize = 2.0,
-#   labSize = 5,
-#   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-#   title = 'OE vs WT (PCV)',
-#   subtitle = 'DEG Volcano Plot',
-#   caption = 'Right = Upregulated | Left = Downregulated',
-#   legendPosition = 'right'
-# )
+```{r,fig.height=9,fig.width=11}
+library(pheatmap)
+
+# Get top 50 DEGs
+top_degs <- deg_ko_wt %>%
+  filter(FDR < 0.05) %>%
+  arrange(FDR) %>%
+  head(50)
+
+# Extract normalized counts for these genes
+#library(edgeR)
+norm_counts <- cpm(pcv_dge$y, log = TRUE)  # Log-CPM normalized
+top_genes_mat <- norm_counts[rownames(top_degs), ]
+
+# Create heatmap
+p <- pheatmap(
+  top_genes_mat,
+  scale = "row",              # Z-score scaling
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  annotation_col = data.frame(
+    Condition = pcv_dge$meta$condition,
+    row.names = colnames(top_genes_mat)
+  ),
+  main = "Top 50 DEGs for PCV: KO vs WT"
+)
+
+p
+save_pub(plot=p, filename ="heatmap_deg_ko_wt",width = 11, height=9)
 ```
 
 
@@ -907,10 +989,77 @@ head(ego_bp)
 ```
 
 ```{r, fig.height=9, fig.width=14}
-barplot(ego_bp, showCategory = 20)
-dotplot(ego_bp, showCategory = 20)
+#this is by padj
+b <- barplot(ego_bp, showCategory = 20)
+d <- dotplot(ego_bp, showCategory = 20)
+save_pub(plot =b, filename="barplot_GO_deg_ko_wt", width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_ko_wt", width=14, height=9)
+```
+
+
+fsgea
+
+
+```{r}
+ranks <- deg_ko_wt$logFC
+names(ranks) <- rownames(deg_ko_wt)
+ranks <- sort(ranks, decreasing = TRUE)
+#library(msigdbr)
+
+msig_c3 <- msigdbr(species = "Mus musculus", category = "C3") #, subcategory = "TFT")
+msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
+
+
+c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
+c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
+#library(fgsea)
+
+fgsea_ets <- fgsea(
+  pathways = c3_tft,
+  stats = ranks,
+  minSize = 10,
+  maxSize = 500
+)
+
+fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA", fgsea_ets$pathway), ]
+fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
+fgsea_ets
+
 
 ```
+
+
+What it does: Creates dot plot of top 20 ETS-related pathways
+How to interpret:
+
+X-axis: NES (right = upregulated in OE, left = upregulated in WT)
+Dot size: Significance (bigger = more significant)
+Dot color: Same as NES (red = up in OE, blue = up in WT)
+
+```{r}
+#library(ggplot2)
+
+top_ets <- fgsea_ets[order(fgsea_ets$padj), ] %>% 
+  head(20)   # top 20 ETS pathways
+
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment (OE vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS / ERG / ELK / ETV target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+save_pub(plot=p,filename="ets_top20_dotplot_deg_ko_wt",width=8,height=8)
+```
+
+
+
+
+
+
 
 
 
