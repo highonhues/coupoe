@@ -10,14 +10,17 @@ output: 05_PP_DGE
 library(Seurat)
 library(tidyverse)
 library(SeuratWrappers)
+library(Cairo)
 library(magicBatch)
 library(BPCells)
 library(batchelor)
 library(patchwork)
+library(msigdbr)
 library(plotly)
 library(gprofiler2)
 library(hdf5r)
 library(kableExtra)
+library(pheatmap)
 library(ggplot2)
 library(gridExtra)
 library(DT)
@@ -75,6 +78,47 @@ dir.create(rds_dir, showWarnings = FALSE)
 dir.create(fig_dir, showWarnings = FALSE)
 ```
 
+
+```{r}
+#library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(celltype_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(celltype_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+
+```
+
+
+
+
 For differential expression analysis of a multi-sample single-cell experiment, pseudo-bulk methods outperform DE methods speciĄcally designed at the single-cell level in terms of both
 stability and computational speed [14].
 We explore the pseudo-bulk proĄles using a multi-dimensional scaling (MDS) plot. This visualizes the differences between the expression proĄles of different samples in two dimensions.
@@ -113,11 +157,24 @@ Before doing DGE, you should aggregate (combine) the expression values of cells 
 Lets start with HEV
 
 
-```{r,fig.width=14,fig.height=5}
-an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+```{r,fig.width=10,fig.height=9}
+an <- DimPlot(seu, split.by= "condition",group.by="cluster_annot",ncol=2) + ggtitle("Annotated Peyers Patches Split by Condition") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.8, bg.colour = "white", bg.r = .2, force = 0)
 ```
+
+
+```{r,fig.width=7,fig.height=5}
+an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.8, bg.colour = "white", bg.r = .2, force = 0)
+an
+```
+
+```{r}
+save_pub(plot=an, filename="PP_all_cell_annot", width = 7, height=5)
+```
+
 
 
 ```{r}
@@ -130,6 +187,9 @@ head(seu@meta.data)
 
 DotPlot(seu, features = c("Bgn","Ctsh","Selp","B4galt6","Sele","Ackr1","Cytl1","Gucy1a1","Icam1"), group.by = "cluster_annot")
 ```
+
+
+This is performing some dataset exploration before I form the functions
 
 
 ```{r}
@@ -253,6 +313,9 @@ table(sce$cluster_annot, sce$condition)
 
 ```
 
+
+
+
 Important to create cell type pseudobulk
 
 ```{r}
@@ -263,14 +326,7 @@ pseudobulk_celltype <- function(
   assay_name = "RNA",
   seed = 1234
 ) {
-  # library(Seurat)
-  # library(SingleCellExperiment)
-  # library(dplyr)
-  # library(scran)
-  # library(scuttle)
-  # library(scater)
-  # library(limma)
-  # 
+  
   #----------------------
   # 1. Subset Seurat to that cell type
   #----------------------
@@ -329,7 +385,6 @@ pseudobulk_celltype <- function(
   pb <- logNormCounts(pb)
 
   
-  
   #----------------------
   # 8. Return everything
   #----------------------
@@ -341,8 +396,9 @@ pseudobulk_celltype <- function(
 ```
 
 ```{r}
-pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
+#pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
 ```
+
 ```{r}
 pb_pcv
 #head(colData(pb_pcv))
@@ -397,7 +453,7 @@ dge_prepare <- function(pb) {
 ```
 
 ```{r}
-#pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
+pb_pcv <- pseudobulk_celltype(seu, celltype = "PCV")
 pcv_dge <- dge_prepare(pb_pcv)
 
 
@@ -408,6 +464,8 @@ pcv_dge$design
 cbind(pcv_dge$meta$pb_id, pcv_dge$meta$condition)
 
 ```
+
+# Differential Expression Testing
 #pos fc means genes are higher in oe/ko/front neg means higher in wt 
 ```{r}
 fit <- pcv_dge$fit
@@ -433,10 +491,10 @@ c_oe_ko <- makeContrasts(conditionOE - conditionKO, levels = design)
 res_oe_ko <- glmLRT(fit,contrast= c_oe_ko)
 deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
 # 
-# # 5. OE vs CRE_CTRL
-# c_oe_cc <- makeContrasts(conditionOE - conditionCRE_CTRL, levels = design)
-# res_oe_cc <- glmLRT(fit, contrast=c_oe_cc)
-# deg_oe_cc <- topTags(res_oe_cc, n = Inf)$table
+# 5. WT vs CRE_CTRL
+c_wt_cc <- makeContrasts(conditionWT - conditionCRE_CTRL, levels = design)
+res_wt_cc <- glmLRT(fit, contrast=c_wt_cc)
+deg_wt_cc <- topTags(res_wt_cc, n = Inf)$table
 # 
 # # 6. KO vs CRE_CTRL
 # c_ko_cc <- makeContrasts(conditionKO - conditionCRE_CTRL, levels = design)
@@ -446,20 +504,154 @@ deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
 
 ```
 
+
+OE WT
+
+log2fc = higher in oe, neg in wt, cpm is higher for more abundant gene, lr =test stat, bigger stronger evidence
+
 ```{r}
-deg_list <- list(
-  OE_vs_WT  = deg_oe_wt,
-  KO_vs_WT  = deg_ko_wt,
-  CC_vs_WT  = deg_cc_wt,
-  OE_vs_KO  = deg_oe_ko
-#   OE_vs_CC  = deg_oe_cc,
-#   KO_vs_CC  = deg_ko_cc
- )
+head(deg_oe_wt)
+```
+
+
+```{r}
+# 
+# write.csv(deg_oe_wt,
+#           file.path(celltype_dir, "deg_oe_wt.csv"),
+#           row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_oe_wt %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
+[1] 773
+
+FALSE  TRUE 
+  377   396 
+
+```{r}
+#ibrary(dplyr)
+
+# Top 20 OE-upregulated genes
+top_up <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in OE)
+top_down <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_oe_wt_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_oe_wt_top20_down.csv"),
+          row.names = TRUE)
 
 ```
 
 
-OE WT
+```{r}
+# library(DT)
+# 
+# # Interactive searchable table
+# datatable(deg_oe_wt, 
+#           filter = 'top',
+#           options = list(pageLength = 50))
+```
+
+
+Viz
+
+```{r,fig.width=9,fig.height=7}
+p <- EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,     # log2 fold change cutoff of ±1
+  pointSize = 2.0,
+  labSize = 5,
+  #col = c('grey30', 'grey30', 'royalblue', 'red2'),
+  title = 'OE vs WT (PCV)',
+  subtitle = 'DEG Volcano Plot',
+  caption = 'Right = Upregulated | Left = Downregulated',
+  legendPosition = 'right'
+)
+p
+save_pub(plot=p,filename= "deg_oe_wt_EVplot", width = 9,height=7)
+```
+
+
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",           "Selp", "Vcam1", "Glycam1", "Icam1")
+         #addressin                 #tf                                  #general pcv/hev genes
+
+p <- EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'OE vs WT - Adhesion Molecules'
+)
+
+save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
+```
+
+
+```{r,fig.height=9,fig.width=11}
+library(pheatmap)
+
+# Get top 50 DEGs
+top_degs <- deg_oe_wt %>%
+  filter(FDR < 0.05) %>%
+  arrange(FDR) %>%
+  head(50)
+
+# Extract normalized counts for these genes
+library(edgeR)
+norm_counts <- cpm(pcv_dge$y, log = TRUE)  # Log-CPM normalized
+top_genes_mat <- norm_counts[rownames(top_degs), ]
+
+# Create heatmap
+p <- pheatmap(
+  top_genes_mat,
+  scale = "row",              # Z-score scaling
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  annotation_col = data.frame(
+    Condition = pcv_dge$meta$condition,
+    row.names = colnames(top_genes_mat)
+  ),
+  main = "Top 50 DEGs for PCV: OE vs WT"
+)
+
+p
+save_pub(plot=p, filename ="heatmap",width = 11, height=9)
+```
+
+
+GO enrichment using ORA
+take significant deg, convert to entrez id and check if the sig genes are over represented in GO (biological processes)
 
 ```{r}
 # Significant DE genes
@@ -505,15 +697,25 @@ head(ego_bp)
 ```
 
 ```{r, fig.height=9, fig.width=14}
-barplot(ego_bp, showCategory = 20)
-dotplot(ego_bp, showCategory = 20)
-
+#this is by padj
+b <- barplot(ego_bp, showCategory = 20)
+d <- dotplot(ego_bp, showCategory = 20)
+save_pub(plot =b, filename="barplot_GO_deg_oe_wt", width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_oe_wt",, width=14, height=9)
 ```
 
 
 
+fsgea
+1.Ranks all genes by logfc more up in oe at top and most up in wt at the bottom
+2. MsigBS gene set c3 is TF target geens, C2 is kegg, reactome etc
+3.Filter for ets related pathways
+4.NES (Normalized Enrichment Score):
 
-ETS
+Positive NES: Gene set enriched in upregulated genes (OE has more)
+Negative NES: Gene set enriched in downregulated genes (WT has more)
+Magnitude matters: |NES| > 2 is strong, > 1.5 is moderate
+
 
 ```{r}
 ranks <- deg_oe_wt$logFC
@@ -544,13 +746,20 @@ fgsea_ets
 ```
 
 
+What it does: Creates dot plot of top 20 ETS-related pathways
+How to interpret:
+
+X-axis: NES (right = upregulated in OE, left = upregulated in WT)
+Dot size: Significance (bigger = more significant)
+Dot color: Same as NES (red = up in OE, blue = up in WT)
+
 ```{r}
 #library(ggplot2)
 
 top_ets <- fgsea_ets[order(fgsea_ets$padj), ] %>% 
   head(20)   # top 20 ETS pathways
 
-ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
@@ -560,13 +769,33 @@ ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
     size = "-log10(FDR)"
   ) +
   theme_bw()
+save_pub(plot=p,filename="ets_top20_dotplot_deg_oe_wt",width=8,height=8)
+```
+
+```{r}
 
 ```
 
 
 
-
 KO WT
+
+```{r}
+# 
+write.csv(deg_ko_wt,
+           file.path(celltype_dir, "deg_ko_wt.csv"),
+           row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_ko_wt %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
 
 ```{r,fig.width=9,fig.height=7}
 EnhancedVolcano(
@@ -584,30 +813,6 @@ EnhancedVolcano(
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
 )
-```
-
-```{r}
-#ibrary(dplyr)
-
-# Top 20 OE-upregulated genes
-top_up <- deg_ko_wt %>%
-  filter(FDR < 0.05, logFC > 0) %>%
-  arrange(desc(logFC)) %>% 
-  head(20)
-
-# Top 20 WT-upregulated genes (down in OE)
-top_down <- deg_ko_wt %>%
-  filter(FDR < 0.05, logFC < 0) %>%
-  arrange(logFC) %>% 
-  head(20)
-write.csv(top_up,
-          file.path(celltype_dir, "KO_vs_WT_top20_up.csv"),
-          row.names = TRUE)
-
-write.csv(top_down,
-          file.path(celltype_dir, "KO_vs_WT_top20_down.csv"),
-          row.names = TRUE)
-
 ```
 
 
@@ -706,3 +911,31 @@ barplot(ego_bp, showCategory = 20)
 dotplot(ego_bp, showCategory = 20)
 
 ```
+
+
+
+```{r}
+print(msigdbr_collections(), n = Inf)
+
+```
+
+
+```{r}
+# Quick check - what do the pathway names look like?
+#head(names(c3_pathways), 20)
+# Check if any ETS pathways exist
+#grep("ERG|ETS|FLI1|GABP|ETV|ELK|SPI1", names(c3_pathways), value = TRUE, ignore.case = TRUE)
+# Check what subcollections exist in C3
+msigdbr_collections() %>% 
+  filter(gs_collection == "C3")
+```
+
+
+
+
+
+
+
+
+
+
