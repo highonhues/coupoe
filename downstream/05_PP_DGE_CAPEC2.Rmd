@@ -43,7 +43,7 @@ library(limma)
 library(EnhancedVolcano)
 library(fgsea)
 library(KEGGREST)
-
+library(pathview)
 library(AnnotationDbi)
 
 library(org.Mm.eg.db)
@@ -142,6 +142,58 @@ an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("A
 LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
 ```
 
+
+
+```{r}
+# ets_family_genes <- c(
+#   "Ehf", "Elf1", "Elf2", "Elf3", "Elf4", "Elf5",
+#   "Elk1", "Elk3", "Elk4",
+#   "Erf", "Erg",
+#   "Ets1", "Ets2",
+#   "Etv1", "Etv2", "Etv4", "Etv5", "Etv6",
+#   "Fli1",
+#   "Gabpa", "Gabpb1", "Gabpb2",
+#   "Spdef",
+#   "Spi1", "Spib", "Spic"
+# )
+# 
+# all_paths <- keggList("pathway", "mmu")
+# 
+# ## 2. Turn each KEGG pathway into a gene-symbol set
+# kegg_gs <- lapply(names(all_paths), function(pid) {
+#   info <- keggGet(pid)[[1]]
+#   genes <- info$GENE
+#   if (is.null(genes)) return(NULL)
+# 
+#   # KEGG returns: c("ID1", "SYMBOL1; desc", "ID2", "SYMBOL2; desc", ...)
+#   symbols <- genes[seq(2, length(genes), 2)]
+#   symbols <- sapply(strsplit(symbols, ";"), `[`, 1)
+#   trimws(symbols)
+# })
+# names(kegg_gs) <- names(all_paths)
+# kegg_gs <- kegg_gs[!sapply(kegg_gs, is.null)]
+
+#kegg_gs
+```
+
+kegg_gs is genes for each mouse pathway that we grab.
+$mmu04670
+[1] "Gene1" "Gene2" "Gene3" ...
+
+$mmu04066
+  [1] "Gm30155"  "Gm34005"  "Ldhal6b"  "Camk2d"   "Egln1"    "Egln2"    "Egln3"    "Gm29667"  "Angpt1"   "Angpt2"  
+ [11] "Angpt4"   "Akt1"     "Akt2"     "Aldoa"    "Aldoc"    "Arnt"     "Bcl2"     "Camk2a"   "Camk2b"  
+```{r}
+#saveRDS(kegg_gs, file = "kegg_gs_mouse.rds")
+kegg_gs <- readRDS("kegg_gs_mouse.rds")
+
+```
+
+```{r}
+saveRDS(msig_c3, file = "msig_c3.rds")
+#kegg_gs <- readRDS("kegg_gs_mouse.rds")
+
+```
 
 Important to create cell type pseudobulk
 
@@ -372,10 +424,10 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[[1] 1043
+[1] 507
 
 FALSE  TRUE 
-  513   530 
+  200   307 
 
 ```{r}
 #ibrary(dplyr)
@@ -402,14 +454,6 @@ write.csv(top_down,
 ```
 
 
-```{r}
-# library(DT)
-# 
-# # Interactive searchable table
-# datatable(deg_oe_wt, 
-#           filter = 'top',
-#           options = list(pageLength = 50))
-```
 
 
 Viz
@@ -611,7 +655,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment HEV(OE vs WT)",
+    title = "ETS-related enrichment CapEC2 (OE vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -624,51 +668,7 @@ save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 ```
 
 
-
-```{r}
-ets_family_genes <- c(
-  "Ehf", "Elf1", "Elf2", "Elf3", "Elf4", "Elf5",
-  "Elk1", "Elk3", "Elk4",
-  "Erf", "Erg",
-  "Ets1", "Ets2",
-  "Etv1", "Etv2", "Etv4", "Etv5", "Etv6",
-  "Fli1",
-  "Gabpa", "Gabpb1", "Gabpb2",
-  "Spdef",
-  "Spi1", "Spib", "Spic"
-)
-
-all_paths <- keggList("pathway", "mmu")
-
-## 2. Turn each KEGG pathway into a gene-symbol set
-kegg_gs <- lapply(names(all_paths), function(pid) {
-  info <- keggGet(pid)[[1]]
-  genes <- info$GENE
-  if (is.null(genes)) return(NULL)
-
-  # KEGG returns: c("ID1", "SYMBOL1; desc", "ID2", "SYMBOL2; desc", ...)
-  symbols <- genes[seq(2, length(genes), 2)]
-  symbols <- sapply(strsplit(symbols, ";"), `[`, 1)
-  trimws(symbols)
-})
-names(kegg_gs) <- names(all_paths)
-kegg_gs <- kegg_gs[!sapply(kegg_gs, is.null)]
-
-#kegg_gs
-```
-
-kegg_gs is genes for each mouse pathway that we grab.
-$mmu04670
-[1] "Gene1" "Gene2" "Gene3" ...
-
-$mmu04066
-  [1] "Gm30155"  "Gm34005"  "Ldhal6b"  "Camk2d"   "Egln1"    "Egln2"    "Egln3"    "Gm29667"  "Angpt1"   "Angpt2"  
- [11] "Angpt4"   "Akt1"     "Akt2"     "Aldoa"    "Aldoc"    "Arnt"     "Bcl2"     "Camk2a"   "Camk2b"  
-```{r}
-saveRDS(kegg_gs, file = "kegg_gs_mouse.rds")
-kegg_gs <- readRDS("kegg_gs_mouse.rds")
-
-```
+Absolutely no relevant enrichment in Cape2 oe v wt!
 
 
 
@@ -696,11 +696,39 @@ ets_kegg <- ets_kegg[order(ets_kegg$padj), ]
 
 ets_kegg
 
+ets_kegg$leadingEdge <- sapply(ets_kegg$leadingEdge, paste, collapse = ",")
 write.csv(
   ets_kegg,
   file.path(celltype_dir, "ets_kegg_fsgea_deg_oe_wt.csv"),
   row.names = FALSE
 )
+```
+```{r}
+
+
+# convert SYMBOL -> ENTrez
+mapped_ids <- mapIds(
+  org.Mm.eg.db,
+  keys = names(ranks),
+  column = "ENTREZID",
+  keytype = "SYMBOL",
+  multiVals = "first"
+)
+
+ranks_entrez <- ranks
+names(ranks_entrez) <- mapped_ids
+ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
+
+old <- getwd()
+setwd(celltype_dir)
+
+pathview(
+  gene.data  = ranks_entrez,# will create this below
+  pathway.id = "mmu04218",     # your enriched KEGG pathway
+  species    = "mmu",
+  out.suffix =  "OE_vs_WT"
+)
+setwd(old)
 ```
 
 
@@ -771,7 +799,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (HEV)',
+  title = 'KO vs WT (CapEC2)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -801,6 +829,8 @@ p <- EnhancedVolcano(
 
 save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
 ```
+
+The KO doesnt even seem to have been knoacked out properly!! Or just that we are not observing enough of each in it ot be significant. So we will NOT proceed with the rest of the analysis.
 
 ```{r,fig.height=9,fig.width=11}
 library(pheatmap)
@@ -956,7 +986,7 @@ save_pub(plot=p, filename="ets_top20_dotplot_deg_ko_wt", width=8, height=8)
 
 ```
 
-```{r}
+
 ```{r}
 fgsea_kegg_full <- fgsea(
   pathways = kegg_gs,
@@ -981,12 +1011,41 @@ ets_kegg <- ets_kegg[order(ets_kegg$padj), ]
 
 ets_kegg
 
+ets_kegg$leadingEdge <- sapply(ets_kegg$leadingEdge, paste, collapse = ",")
 write.csv(
   ets_kegg,
   file.path(celltype_dir, "ets_kegg_fsgea_deg_ko_wt.csv"),
   row.names = FALSE
 )
 ```
+
+
+```{r}
+
+
+# convert SYMBOL -> ENTrez
+mapped_ids <- mapIds(
+  org.Mm.eg.db,
+  keys = names(ranks),
+  column = "ENTREZID",
+  keytype = "SYMBOL",
+  multiVals = "first"
+)
+
+ranks_entrez <- ranks
+names(ranks_entrez) <- mapped_ids
+ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
+
+old <- getwd()
+setwd(celltype_dir)
+
+pathview(
+  gene.data  = ranks_entrez,# will create this below
+  pathway.id = "mmu04218",     # your enriched KEGG pathway
+  species    = "mmu",
+  out.suffix =  "KO_vs_WT"
+)
+setwd(old)
 ```
 
 
@@ -1019,10 +1078,11 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 1235
+
+[1] 827
 
 FALSE  TRUE 
-  625   610  
+  373   454 
 
 ```{r}
 #ibrary(dplyr)
