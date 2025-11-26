@@ -585,7 +585,7 @@ ranks <- deg_oe_wt$logFC
 names(ranks) <- rownames(deg_oe_wt)
 ranks <- sort(ranks, decreasing = TRUE)
 
-msig_c3 <- msigdbr(species = "Mus musculus", category = "C3")
+msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
 
 c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
 
@@ -596,33 +596,38 @@ fgsea_ets <- fgsea(
   maxSize = 500
 )
 
+fgsea_ets$leadingEdge <- sapply(fgsea_ets$leadingEdge, paste, collapse = ",")
 
-write.csv(fgsea_ets,
-          file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_oe_wt.csv"),
-          row.names = FALSE)
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_oe_wt.csv"),
+  row.names = FALSE
+)
 
 # ------------------------------------------------
+fgsea_ets <- fgsea_ets[
+  grep("^(ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG)", fgsea_ets$pathway),
+]
 
-fgsea_ets <- fgsea_ets[grep("ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG", fgsea_ets$pathway), ]
 
 # FDR filter + order (your minimal fixes)
-fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.25, ]
+#fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.26, ]
 fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
 
 top_ets <- head(fgsea_ets, 20)
 top_ets
-# p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
-#   geom_point(aes(size = -log10(padj), color = NES)) +
-#   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
-#   labs(
-#     title = "ETS-related enrichment (OE vs WT)",
-#     x = "Normalized Enrichment Score (NES)",
-#     y = "ETS  target sets",
-#     size = "-log10(FDR)"
-#   ) +
-#   theme_bw()
-# 
-# save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment HEV(OE vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 
 
 ```
@@ -638,21 +643,21 @@ Dot color: Same as NES (red = up in OE, blue = up in WT)
 ```{r}
 #library(ggplot2)
 
-top_ets <- fgsea_ets[order(fgsea_ets$padj), ] %>% 
-  head(20)   # top 20 ETS pathways
-
-p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
-  geom_point(aes(size = -log10(padj), color = NES)) +
-  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
-  labs(
-    title = "ETS-related enrichment (OE vs WT)",
-    x = "Normalized Enrichment Score (NES)",
-    y = "ETS / ERG / ELK / ETV target sets",
-    size = "-log10(FDR)"
-  ) +
-  theme_bw()
-save_pub(plot=p,filename="ets_top20_dotplot_deg_oe_wt",width=8,height=8)
-```
+# top_ets <- fgsea_ets[order(fgsea_ets$padj), ] %>% 
+#   head(20)   # top 20 ETS pathways
+# 
+# p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+#   geom_point(aes(size = -log10(padj), color = NES)) +
+#   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+#   labs(
+#     title = "ETS-related enrichment (OE vs WT)",
+#     x = "Normalized Enrichment Score (NES)",
+#     y = "ETS target sets",
+#     size = "-log10(FDR)"
+#   ) +
+#   theme_bw()
+# save_pub(plot=p,filename="ets_top20_dotplot_deg_oe_wt",width=8,height=8)
+# ```
 
 ```{r}
 
@@ -718,7 +723,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (PCV)',
+  title = 'KO vs WT (HEV)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -775,7 +780,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for PCV: KO vs WT"
+  main = "Top 50 DEGs for HEV: KO vs WT"
 )
 
 p
@@ -827,6 +832,9 @@ ego_bp <- enrichGO(
 
 head(ego_bp)
 
+write.csv(ego_bp,
+          file.path(celltype_dir, "ego_bp_deg_ko_wt.csv"),
+          row.names = FALSE)
 ```
 
 ```{r, fig.height=9, fig.width=14}
@@ -840,20 +848,14 @@ save_pub(plot =d, filename="dotplot_GO_deg_ko_wt", width=14, height=9)
 
 fsgea
 
-
 ```{r}
 ranks <- deg_ko_wt$logFC
 names(ranks) <- rownames(deg_ko_wt)
 ranks <- sort(ranks, decreasing = TRUE)
-#library(msigdbr)
 
-msig_c3 <- msigdbr(species = "Mus musculus", category = "C3") #, subcategory = "TFT")
-msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
-
+msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
 
 c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
-c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
-#library(fgsea)
 
 fgsea_ets <- fgsea(
   pathways = c3_tft,
@@ -862,9 +864,66 @@ fgsea_ets <- fgsea(
   maxSize = 500
 )
 
-fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA", fgsea_ets$pathway), ]
-fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
-fgsea_ets
+fgsea_ets$leadingEdge <- sapply(fgsea_ets$leadingEdge, paste, collapse = ",")
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_ko_wt.csv"),
+  row.names = FALSE
+)
+
+# ------------------------------------------------
+fgsea_ets <- fgsea_ets[
+  grep("^(ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG)", fgsea_ets$pathway),
+]
+
+
+# FDR filter + order (your minimal fixes)
+#fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.26, ]
+fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
+
+top_ets <- head(fgsea_ets, 20)
+top_ets
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment HEV (KO vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_ko_wt", width=8, height=8)
+
+
+```
+
+```{r}
+# ranks <- deg_ko_wt$logFC
+# names(ranks) <- rownames(deg_ko_wt)
+# ranks <- sort(ranks, decreasing = TRUE)
+# #library(msigdbr)
+# 
+# msig_c3 <- msigdbr(species = "Mus musculus", category = "C3") #, subcategory = "TFT")
+# msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
+# 
+# 
+# c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
+# c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
+# #library(fgsea)
+# 
+# fgsea_ets <- fgsea(
+#   pathways = c3_tft,
+#   stats = ranks,
+#   minSize = 10,
+#   maxSize = 500
+# )
+# 
+# fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA", fgsea_ets$pathway), ]
+# fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
+# fgsea_ets
 
 
 ```
