@@ -1,6 +1,6 @@
 # COUP-TFII OE/KO scRNA-seq (WIP)
 
-Actively building this out. This is mainly to track the analysis flow, what’s implemented. Will be adding documentation to follow like a code based tutorial if you want to follow along.
+Actively building this out. This is mainly to track the analysis flow, what’s implemented. Will be adding documentation to follow like a code based tutorial if you want to recreate workflow steps for your own analysis. If you are from the Dinh Lab or from the Lee Lab and have any questions with your analysis, please don't hesitate to reach out! I am happy to help.
 
 ## Project Summary
 COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + HTO). Goal is to isolate BEC subsets (HEC, PCV, CRP, arterial, capillary, TrEC), run  DGE, and quantify shifts in ETS/NKX/COUP-driven endothelial programs. Primary markers: Madcam1, St6gal1, Glycam1, Ccl21, etc.
@@ -31,8 +31,8 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 - Export topTables, ranked logFC vectors for GSEA.
 
 ### 5. FGSEA (C2 + C3)
-- C3 TFT gene sets (`msigdbr(category="C3")`).
-- C2 KEGG gene sets (`msigdbr(category="C2")`).
+- C3 TFT gene sets (`msigdbr(collection="C3")`).
+- C2 KEGG gene sets using KEGGREST. (Batch download is prohibited and 350 API calls are VERY slow. So once you have the data frm the DB, save it as an rds object). It will also be in the Dinh lab drive.
 - Run fgsea on ranked logFC.
 - Filter C3 for ETS/ERG/ELF/ETV motifs.
 - KEGG subset: pathways with ≥1 ETS gene + FDR < 0.25.
