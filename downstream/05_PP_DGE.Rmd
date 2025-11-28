@@ -1272,12 +1272,12 @@ names(ranks) <- rownames(deg_oe_ko)
 ranks <- sort(ranks, decreasing = TRUE)
 #library(msigdbr)
 
-msig_c3 <- msigdbr(species = "Mus musculus", category = "C3") #, subcategory = "TFT")
-msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
+msig_c3 <- msigdbr(species = "Mus musculus", collection =  = "C3") #, subcategory = "TFT:GTRD")
+#msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
 
 
 c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
-c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
+#c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
 #library(fgsea)
 
 fgsea_ets <- fgsea(
@@ -1287,11 +1287,47 @@ fgsea_ets <- fgsea(
   maxSize = 500
 )
 
-fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA", fgsea_ets$pathway), ]
+fgsea_ets <- fgsea_ets[grep("ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG", fgsea_ets$pathway), ]
 fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
 fgsea_ets
 
 
+```
+Are these gene sets that have TF binding motifs in their promoter sites
+
+```{r}
+ranks <- deg_oe_ko$logFC
+names(ranks) <- rownames(deg_oe_ko)
+ranks <- sort(ranks, decreasing = TRUE)
+#library(msigdbr)
+
+#msig_c3_gtrd <- msigdbr(species = "Mus musculus", collection = "C3" , subcollection = "TFT:GTRD")
+msig_c3_legacy <- msigdbr(species = "Mus musculus", collection = "C3" , subcollection = "TFT:TFT_LEGACY")
+#msig_c2 <- msigdbr(species = "Mus musculus", category = "C2")
+
+
+c3_tft <- split(msig_c3_legacy$gene_symbol, msig_c3$gs_name)
+#c2_pathways <- split(msig_c2$gene_symbol, msig_c2$gs_name)
+#library(fgsea)
+
+fgsea_ets <- fgsea(
+  pathways = c3_tft,
+  stats = ranks,
+  minSize = 10,
+  maxSize = 500
+)
+
+fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA|ELG|ERF|ESE|ELF|PEA3", fgsea_ets$pathway), ]
+# fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
+fgsea_ets
+
+
+```
+```{r}
+
+fgsea_ets <- fgsea_ets[grep("ETS|ERG|ELK|FLI|ETV|GGA|ELG|ERF|ESE|ELF|PEA3", fgsea_ets$pathway), ]
+# fgsea_ets <- fgsea_ets[order(fgsea_ets$pval), ]
+fgsea_ets
 ```
 
 
@@ -1321,6 +1357,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
 save_pub(plot=p,filename="ets_top20_dotplot_deg_oe_ko",width=8,height=8)
 ```
 
+Gene sets representing potential targets of regulation by transcription factors or microRNAs. The sets consist of genes grouped by their shared regulatory element. The motifs represent known or likely cis-regulatory elements in promoters and 3'-UTRs. These gene sets make it possible to link changes in an expression profiling experiment to a putative cis-regulatory element. The C3 collection is divided into two subcollections: microRNA targets (MIR) and transcription factor targets (TFT).
 
 
 
@@ -1336,6 +1373,8 @@ print(msigdbr_collections(), n = Inf)
 # Check if any ETS pathways exist
 #grep("ERG|ETS|FLI1|GABP|ETV|ELK|SPI1", names(c3_pathways), value = TRUE, ignore.case = TRUE)
 # Check what subcollections exist in C3
+msigdbr_collections() %>% 
+  filter(gs_collection == "C2")
 msigdbr_collections() %>% 
   filter(gs_collection == "C3")
 ```
