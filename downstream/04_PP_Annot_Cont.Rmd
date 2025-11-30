@@ -35,6 +35,7 @@ library(multtest)
 library(metap)
 library(future)
 library(parallelly)
+library(Cairo)
 plan(multicore, workers = 8)
 
 
@@ -73,6 +74,95 @@ saveRDS(
   object = seu,
   file = file.path(rds_dir, "seu_pp_all_reps.rds")
 )
+
+
+```{r}
+## remove the x-axis text and tick
+## plot.margin to adjust the white space between each plot.
+## ... pass any arguments to VlnPlot in Seurat
+modify_vlnplot<- function(obj, 
+                          feature, 
+                          pt.size = 0, 
+                          plot.margin = unit(c(-0.75, 0, -0.75, 0), "cm"),
+                          ...) {
+  p<- VlnPlot(obj, features = feature, pt.size = pt.size, ... )  + 
+    xlab("") + ylab(feature) + ggtitle("") + 
+    theme(legend.position = "none", 
+          axis.text.x = element_blank(), 
+          axis.ticks.x = element_blank(), 
+          axis.title.y = element_text(size = rel(1), angle = 0), 
+          axis.text.y = element_text(size = rel(1)), 
+          plot.margin = plot.margin ) 
+  return(p)
+}
+
+## extract the max value of the y axis
+extract_max<- function(p){
+  ymax<- max(ggplot_build(p)$layout$panel_scales_y[[1]]$range$range)
+  return(ceiling(ymax))
+}
+
+
+## main function
+StackedVlnPlot<- function(obj, features,
+                          pt.size = 0, 
+                          plot.margin = unit(c(-0.75, 0, -0.75, 0), "cm"),
+                          ...) {
+  
+  plot_list<- purrr::map(features, function(x) modify_vlnplot(obj = obj,feature = x, ...))
+  
+  # Add back x-axis title to bottom plot. patchwork is going to support this?
+  plot_list[[length(plot_list)]]<- plot_list[[length(plot_list)]] +
+    theme(axis.text.x=element_text(), axis.ticks.x = element_line())
+  
+  # change the y-axis tick to only max value 
+  ymaxs<- purrr::map_dbl(plot_list, extract_max)
+  plot_list<- purrr::map2(plot_list, ymaxs, function(x,y) x + 
+                            scale_y_continuous(breaks = c(y)) + 
+                            expand_limits(y = y))
+
+  p<- patchwork::wrap_plots(plotlist = plot_list, ncol = 1)
+  return(p)
+}
+```
+
+
+
+```{r}
+#library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(fig_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(fig_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+```
 
 
 ```{r}
@@ -485,6 +575,37 @@ seu <- FindClusters(seu, resolution = 0.4, cluster.name = "mnn_clusters")
 ```
 
 
+I need to rename the vn cluster
+
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
+```
+before
+
+
+
+```{r,fig.width=6,fig.height=5}
+an2 <- DimPlot(seu,group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 3, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+seu@meta.data$cluster_annot[seu@meta.data$cluster_annot == "Vn Sele- Cdh13+"] <- "Vn Sele-"
+
+```
+
+review
+
+```{r,fig.width=14,fig.height=5}
+an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+
+
 ```{r}
 # Initialize empty column
 seu@meta.data$cluster_annot <- NA
@@ -497,7 +618,7 @@ seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "TrEC"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pre-Artery"
-seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele- Cdh13+"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele-"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Barrier EC"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "CRP"
 
@@ -509,13 +630,43 @@ table(seu@meta.data$cluster_annot)
 ```
 
 
-```{r}
-an2 <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+```{r,fig.width=14,fig.height=5}
+an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
 LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
 ```
+```{r}
+
+saveRDS(
+  object = seu,
+  file = file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
 ```
 
+Checking if HEV have higher RNA content
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
+```
+
+```{r}
+
+```
+
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA"), group.by = "cluster_annot",
+              pt.size = 0,
+              ncol = 1) #+   geom_boxplot(outlier.shape = NA) +  geom_jitter(width = 0.2)
+#+ ggtitle("After QC")
+
+# Visualize QC metrics as a violin plot
+# VlnPlot(coupko_clean, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+#save_pub(plot=p,filename="Rna_of_annots", width=10,height=4)
+```
+
+```{r}
+
+```
 
 
 ```{r}
