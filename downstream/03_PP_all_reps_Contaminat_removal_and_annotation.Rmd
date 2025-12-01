@@ -198,23 +198,23 @@ p <- FeaturePlot(seu, features = c("LEC", "Lymphocyte", "FRC"),label=T,
 save_pub(plot=p, filename="fpcont",width=8)
 ```
 ```{r,fig.width=12,fig.height=5}
-VlnPlot(
+p <- VlnPlot(
   seu,
   features = c("LEC", "Lymphocyte", "FRC"),
   group.by = "seurat_clusters",
   pt.size = 0
 )
-
+save_pub(plot=p, filename="vlncont",width=12, height=4)
 ```
 
 ```{r}
-DotPlot(seu,
+p <- DotPlot(seu,
   features = unique(c(lec, lymphocytes, fib_ret)),
   group.by = "seurat_clusters"
 ) + RotatedAxis() +  ggtitle("Contaminant Marker Expression Across Clusters") +
   theme(plot.title = element_text(hjust = 0.7, size = 12, face = "bold"))
 
-
+save_pub(plot=p, filename="dpcont",width=7, height=7)
 ```
 
 So some of the cells show mild expression. But when I had performed a feature plot it was mixing with other important clusters that i gaf about and i dont want to deal with that.
@@ -248,6 +248,15 @@ for (i in seq_along(modules)) {
 wrap_plots(plot_list, ncol = 1)
 
 ```
+```{r}
+p <- wrap_plots(plot_list, ncol = 1)
+save_pub(plot=p, filename="thrcont")
+```
+
+
+
+
+
 ```{r}
 ncol(seu)
 table(seu$orig.ident)
