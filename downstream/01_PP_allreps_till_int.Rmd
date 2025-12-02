@@ -71,6 +71,43 @@ saveRDS(
 )
 
 ```{r}
+library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(fig_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(fig_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+```
+
+
+```{r}
 samples_df <- read.csv("samples_pp_only.csv",header=TRUE, stringsAsFactors = FALSE) #gsub works on chr
 
 samples_df$SampleName <- gsub("_", "-", samples_df$SampleName)
@@ -171,10 +208,17 @@ saveRDS(
 )
 ```
 
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_just_merged.rds"))
+```
+
 
 ```{r}
 #Features above 6000 might be doublets ngl no but hevs have v high transcription
-FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+seu$genotype[seu$genotype == "KO_WT"] <- "CRE_CTRL"
+
+p <- FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+save_pub(plot=p, filename="mergeUMIvsgenes" )
   #+ ggtitle("QC: UMIs vs Genes")
 ```
 ```{r}
@@ -190,7 +234,7 @@ df$sum <- seu$nCount_RNA
 df$detected <- seu$nFeature_RNA
 
 
-ggplot(df, aes(x = sum, y = detected)) +
+p <- ggplot(df, aes(x = sum, y = detected)) +
   geom_point(aes(colour = percent.mt > 10), alpha = 0.7, size = 1) +
   facet_wrap(vars(genotype)) +
   scale_color_manual(
@@ -208,14 +252,14 @@ ggplot(df, aes(x = sum, y = detected)) +
     plot.title = element_text(hjust = 0.5, face = "bold"),
     strip.text = element_text(face = "bold")
   )
-
+save_pub(plot=p, filename="Detected_genes_vs_totcount",width=12)
 ```
 
 ```{r,fig.width=10, fig.height=4}
-VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+p <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
               pt.size = 0,
               ncol = 3) #+ ggtitle("Before QC")
-
+save_pub(plot=p, filename="b4_qc",width=10,height=4)
 ```
 
 ```{r}
@@ -242,13 +286,13 @@ seu <- readRDS(file = file.path(rds_dir,"seu_pp_merged_mt_clean.rds"))
 
 
 ```{r,fig.width=10, fig.height=4}
-VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+p <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
               pt.size = 0,
               ncol = 3) #+ ggtitle("After QC")
 
 # Visualize QC metrics as a violin plot
 # VlnPlot(coupko_clean, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-
+save_pub(plot=p, filename="aft_qc",width=10,height=4)
 ```
 
 Workflow to integrate
