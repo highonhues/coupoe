@@ -648,7 +648,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CapEC2: OE vs WT"
+  main = "Top 50 DEGs for CapEC Ifn: OE vs WT"
 )
 
 p
