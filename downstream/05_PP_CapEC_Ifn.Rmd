@@ -565,7 +565,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'OE vs WT (mafb IFN)',
+  title = 'OE vs WT (CapEC Ifn)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -577,7 +577,7 @@ save_pub(plot=p,filename= "deg_oe_wt_EVplot", width = 9,height=7)
 
 ```{r, fig.width=9, fig.height=7}
 # Genes you care about
-goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",     "Ccl21","Sele", "Ephb4" ,"Selp", "Vcam1", "Glycam1", "Icam1", "Vwf",)
+goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",     "Ccl21","Sele", "Ephb4" ,"Selp", "Vcam1", "Glycam1", "Icam1")
          #addressin                 #tf                                  #general pcv/hev genes
 
 p <- EnhancedVolcano(
@@ -591,10 +591,10 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = 'OE vs WT - Adhesion Molecules'
+  title = 'OE vs WT - CapEC Ifn'
 )
 
-save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
+save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot_capifn", width = 9,height=7)
 ```
 
 ```{r, fig.width=9, fig.height=7}
@@ -775,7 +775,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC2 (OE vs WT)",
+    title = "ETS-related enrichment CapEC lfn (OE vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -787,8 +787,24 @@ save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 
 ```
 
+name correction
+```{r}
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment CapEC lfn (OE vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
 
-Absolutely no relevant enrichment in Cape2 oe v wt!
+save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
+```
+
+
+Absolutely no relevant enrichment in Capec lfn oe v wt!
 
 
 
@@ -823,6 +839,8 @@ write.csv(
   row.names = FALSE
 )
 ```
+Nothing. so we will just move on we have all we need for cap Ifn.
+
 ```{r}
 
 
@@ -919,7 +937,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (CapEC2)',
+  title = 'KO vs WT (CapEC Ifn)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -947,7 +965,7 @@ p <- EnhancedVolcano(
   title = 'KO vs WT - Adhesion Molecules'
 )
 
-save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
+save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot_capifn", width = 9,height=7)
 ```
 
 The KO doesnt even seem to have been knoacked out properly!! Or just that we are not observing enough of each in it ot be significant. So we will NOT proceed with the rest of the analysis.
