@@ -129,7 +129,7 @@ StackedVlnPlot<- function(obj, features,
 
 
 ```{r}
-#library(Cairo)
+library(Cairo)
 save_pub <- function(plot,
                      filename,
                      width = 7,
@@ -244,7 +244,8 @@ head(seu@meta.data)
 ```{r}
 a <- DimPlot(seu, group.by="seurat_clusters") + NoLegend() + ggtitle("Cluster Split By Cell") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(a, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+a <- LabelClusters(a, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+a
 ```
 
 
@@ -466,9 +467,10 @@ head(seu@meta.data)
 
 
 ```{r}
-an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+a <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+a <- LabelClusters(a, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+save_pub(plot=a,filename="annone",width=9)
 ```
 
 ```{r}
@@ -583,12 +585,49 @@ seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
 ```
 before
 
+```{r}
+ncol(seu)
+```
+
+
+
+I need to see this mafb thing it might not even be venous but just CAP IFN
+
+```{r}
+
+# cell markers
+
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1", "Fut7")
+art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
+CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
+PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
+CapEC_marker <- c("Cdh13", "Emcn", "Gja1", "Gpihbp1", "Ly6a", "Ly6c1", "Podxl", "Ramp3")
+CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund", "Nfkbia", "Nr4a1", "Sgk1") #this overlaps w a lot of others and the capec1 too
+CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
+art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
+
+capifn <- c("Irf7","Cxcl9" ,"Cxcl10","Ifit1","Emcn" ,"Ly6a","Cdh13","Igfbp3","Ackr1","Vwf") #Ackr1 nahi hona chaiye in non Vn
+```
+
+ankr1 nahi hai,vwf nahi hai
+```{r,fig.width=12,fig.height=11}
+FeaturePlot(seu,capifn,label=T)
+FeaturePlot(seu,CapEC1_marker,label=T)
+```
+
+
+
+```{r}
+table(seu$orig.ident)
+```
 
 
 ```{r,fig.width=6,fig.height=5}
-an2 <- DimPlot(seu,group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+an <- DimPlot(seu,group.by="cluster_annot") + ggtitle("BECs of Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 3, bg.colour = "white", bg.r = .2, force = 0)
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 3, bg.colour = "white", bg.r = .2, force = 0)
+an
+save_pub(plot=an, filename="becann",width=6,height=5)
 ```
 
 ```{r}
@@ -603,6 +642,10 @@ an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("A
   theme(plot.title = element_text(hjust = 0.5))
 LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
 ```
+Rename to capecIfn
+```{r}
+seu@meta.data$cluster_annot[seu@meta.data$cluster_annot == "Mafb+ Vn"] <- "CapEC Ifn"
+```
 
 
 
@@ -613,7 +656,7 @@ seu@meta.data$cluster_annot <- NA
 # Map each cluster manually
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
-seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Mafb+ Vn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "CapEC Ifn"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "TrEC"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
@@ -630,11 +673,14 @@ table(seu@meta.data$cluster_annot)
 ```
 
 
-```{r,fig.width=14,fig.height=5}
-an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+```{r,fig.width=10,fig.height=9}
+an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot",ncol=2) + ggtitle("Annotated Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
-LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+an2 <- LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 4, bg.colour = "white", bg.r = .2, force = 0)
+save_pub(plot=an2, filename="spcon",width=10,height=9)
 ```
+
+
 ```{r}
 
 saveRDS(
@@ -649,22 +695,31 @@ seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
 ```
 
 ```{r}
-
+seu <- subset(seu, subset = nFeature_RNA > 100 & nCount_RNA < 25000)
 ```
 
 
 ```{r,fig.width=10, fig.height=4}
-VlnPlot(seu, features = c("nFeature_RNA"), group.by = "cluster_annot",
+p <- VlnPlot(seu, features = c("nCount_RNA"), group.by = "cluster_annot",
               pt.size = 0,
               ncol = 1) #+   geom_boxplot(outlier.shape = NA) +  geom_jitter(width = 0.2)
 #+ ggtitle("After QC")
-
+p
 # Visualize QC metrics as a violin plot
 # VlnPlot(coupko_clean, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-#save_pub(plot=p,filename="Rna_of_annots", width=10,height=4)
+save_pub(plot=p,filename="Rna_of_annots", width=10,height=4)
 ```
+https://divingintogeneticsandgenomics.com/post/stacked-violin-plot-for-visualizing-single-cell-data-in-seurat/
+```{r, fig.width==14, fig.height=6}
+p <- VlnPlot(
+  seu,
+  features = c("Ackr1", "Hey1","Nr2f2"),
+  split.by = "condition",
+  pt.size = 0,idents = c("CapEC2", "Barrier EC","CRP"),
+  ncol = 1
+)
 
-```{r}
+p & theme(legend.position = "right")  # use patchwork override
 
 ```
 
