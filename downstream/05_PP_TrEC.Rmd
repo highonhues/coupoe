@@ -205,15 +205,16 @@ Important to create cell type pseudobulk
 pseudobulk_celltype <- function(
   seu, 
   #celltype, 
-  n_pseudo = 3,
+  n_pseudo = 2,
   assay_name = "RNA",
-  oe_samples = c("COUPOE-PP-POS1", "COUPOE-PP1", "COUPOE-PP2"),
+  oe_samples = c( "COUPOE-PP1", "COUPOE-PP2"),
   seed = 1234
 ) {
    
   #----------------------
   # 1. Subset Seurat to that cell type
-  #----------------------
+
+  seu <- subset(seu, subset = orig.ident != "COUPOE-PP-POS1")
   #seu_sub <- subset(seu, subset = cluster_annot == celltype)
   message("Cells in this cell type: ", ncol(seu))
   if (ncol(seu) < 50) warning("Very few cells — PCA & DGE may be unstable.")
@@ -332,6 +333,37 @@ plotReducedDim(pb_sce, "PCA", colour_by = "libsize", point_size=4) +theme(
         legend.title = element_text(size = 15)
     )
 #plotReducedDim(pb_sce, "PCA", colour_by = "cell_annot")
+```
+
+```{r, fig.width=13, fig.height=6}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    ) +plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+```
+
+```{r}
+mat <- assay(pb_sce, "logcounts")
+batch <- pb_sce$orig.ident
+
+mat_corrected <- removeBatchEffect(mat, batch=batch)
+pc <- prcomp(t(mat_corrected))
+df <- data.frame(
+  PC1 = pc$x[,1],
+  PC2 = pc$x[,2],
+  condition = pb_sce$condition,
+  orig.ident = pb_sce$orig.ident
+)
+
+#library(ggplot2)
+ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
+  geom_point(size=4) + 
+  theme(legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
 ```
 
 
