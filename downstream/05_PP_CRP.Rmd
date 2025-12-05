@@ -30,6 +30,7 @@ library(data.table)
 library(dplyr)
 library(tidyverse)
 library(glue)
+library(msigdbr)
 library(ggrepel)
 library(gprofiler2)
 library(multtest)
@@ -146,17 +147,17 @@ LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colo
 
 
 ```{r}
-# ets_family_genes <- c(
-#   "Ehf", "Elf1", "Elf2", "Elf3", "Elf4", "Elf5",
-#   "Elk1", "Elk3", "Elk4",
-#   "Erf", "Erg",
-#   "Ets1", "Ets2",
-#   "Etv1", "Etv2", "Etv4", "Etv5", "Etv6",
-#   "Fli1",
-#   "Gabpa", "Gabpb1", "Gabpb2",
-#   "Spdef",
-#   "Spi1", "Spib", "Spic"
-# )
+ets_family_genes <- c(
+  "Ehf", "Elf1", "Elf2", "Elf3", "Elf4", "Elf5",
+  "Elk1", "Elk3", "Elk4",
+  "Erf", "Erg",
+  "Ets1", "Ets2",
+  "Etv1", "Etv2", "Etv4", "Etv5", "Etv6",
+  "Fli1",
+  "Gabpa", "Gabpb1", "Gabpb2",
+  "Spdef",
+  "Spi1", "Spib", "Spic"
+)
 # 
 # all_paths <- keggList("pathway", "mmu")
 # 
@@ -501,10 +502,24 @@ p <- EnhancedVolcano(
 
 save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
 ```
+```{r}
+# Subset by cell type (example: CRP)
+crp <- subset(seu, idents = "CRP")
+
+# Violin plot of a feature split by condition
+VlnPlot(
+  object = crp,
+  features = "Cd31",
+  group.by = "condition",
+  pt.size = 0
+)
+
+```
+
 
 ```{r, fig.width=9, fig.height=7}
 # Genes you care about
-goi <- c("Madcam1", "St6gal1","Nr2f2" ,"Nkx2-3", "Ccl21a","Ubd", "Fut7", "Oit1", "Clu" ,"Vwf" ,"Selp", "Vcam1", "Glycam1", "Icam1")
+goi <- c("Madcam1", "St6gal1" ,"Nkx2-3", "Ccl21a","Ubd", "Fut7", "Oit1", "Clu" ,"Vwf" ,"Selp", "Sele", "Vcam1", "Glycam1", "Icam1","Nr2f2")
          #addressin                                                   
 
 p <- EnhancedVolcano(
@@ -521,7 +536,7 @@ p <- EnhancedVolcano(
   title = 'Is There Reprogramming of CRP to HEV? OE vs WT'
 )
 
-save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
+save_pub(plot=p,filename= "degcrpreprog", width = 9,height=7)
 ```
 
 
@@ -620,6 +635,18 @@ d <- dotplot(ego_bp, showCategory = 20)
 save_pub(plot =b, filename="barplot_GO_deg_oe_wt", width=14, height=9)
 save_pub(plot =d, filename="dotplot_GO_deg_oe_wt", width=14, height=9)
 ```
+```{r, fig.height=14}
+d <- dotplot(ego_bp, showCategory = 20) +
+  theme(
+    axis.text.y  = element_text(size = 22, face = "bold"),  # bigger + bold
+    axis.text.x  = element_text(size = 22, face = "bold"),  # bigger + bold
+    legend.title = element_text(size = 22, face = "bold"),  # legend title
+    legend.text  = element_text(size = 22),                 # legend labels
+  )
+
+d
+save_pub(plot=d, filename ="crpora",width = 12, height=14)
+```
 
 
 
@@ -639,7 +666,7 @@ ranks <- deg_oe_wt$logFC
 names(ranks) <- rownames(deg_oe_wt)
 ranks <- sort(ranks, decreasing = TRUE)
 
-msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
+#msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
 
 c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
 
@@ -676,11 +703,16 @@ fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
 
 top_ets <- head(fgsea_ets, 20)
 top_ets
+
+
+
+```
+```{r}
 p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC2 (OE vs WT)",
+    title = "ETS-related enrichment CRP (OE vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -688,16 +720,15 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   theme_bw()
 
 save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
-
-
 ```
 
 
-Absolutely no relevant enrichment in Cape2 oe v wt!
+Absolutely no relevant enrichment in CRP oe v wt!
 
 
 
 ```{r}
+
 fgsea_kegg_full <- fgsea(
   pathways = kegg_gs,
   stats    = ranks,
@@ -744,18 +775,42 @@ ranks_entrez <- ranks
 names(ranks_entrez) <- mapped_ids
 ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
-old <- getwd()
-setwd(celltype_dir)
+# old <- getwd()
+# setwd(celltype_dir)
+# 
+# pathview(
+#   gene.data  = ranks_entrez,# will create this below
+#   pathway.id = "mmu04218",     # your enriched KEGG pathway
+#   species    = "mmu",
+#   out.suffix =  "OE_vs_WT"
+# )
+# setwd(old)
 
-pathview(
-  gene.data  = ranks_entrez,# will create this below
-  pathway.id = "mmu04218",     # your enriched KEGG pathway
-  species    = "mmu",
-  out.suffix =  "OE_vs_WT"
-)
-setwd(old)
+
+
 ```
 
+
+
+```{r}
+
+old <- getwd()
+setwd(celltype_dir)
+kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
+
+for (pid in kegg_ids) {
+  message("Running Pathview for: ", pid, " (OE_vs_WT)")
+
+  pathview(
+    gene.data  = ranks_entrez,
+    pathway.id = pid,
+    species    = "mmu",
+    out.suffix = paste0("OE_vs_WT_crp", pid)
+  )
+}
+
+setwd(old)
+```
 
 What it does: Creates dot plot of top 20 ETS-related pathways
 How to interpret:
@@ -1399,6 +1454,8 @@ names(ranks_entrez) <- mapped_ids
 ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
 ```
+
+
 ```{r}
 kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
 
