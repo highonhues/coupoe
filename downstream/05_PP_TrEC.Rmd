@@ -30,6 +30,7 @@ library(data.table)
 library(dplyr)
 library(tidyverse)
 library(glue)
+library(msigdbr)
 library(ggrepel)
 library(gprofiler2)
 library(multtest)
@@ -68,7 +69,7 @@ base_dir <- "PP_outputs"
 # Define output directories
 rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
 fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
-celltype_dir <- file.path(base_dir, "PP_CapEC_Ifn")
+celltype_dir <- file.path(base_dir, "PP_TrEC")
 dir.create(celltype_dir, showWarnings = FALSE, recursive = TRUE)
 
 
@@ -120,10 +121,10 @@ save_pub <- function(plot,
 seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
 ```
 
-I want to check if Mafb is Cap Ifn
+
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
-seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "CapEC Ifn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Cap Ifn"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "TrEC"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
@@ -141,6 +142,7 @@ Lets start with HEV
 an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
 LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+an
 ```
 
 
@@ -202,24 +204,25 @@ Important to create cell type pseudobulk
 ```{r}
 pseudobulk_celltype <- function(
   seu, 
-  celltype, 
-  n_pseudo = 3,
+  #celltype, 
+  n_pseudo = 2,
   assay_name = "RNA",
-  oe_samples = c("COUPOE-PP-POS1", "COUPOE-PP1", "COUPOE-PP2"),
+  oe_samples = c( "COUPOE-PP1", "COUPOE-PP2"),
   seed = 1234
 ) {
    
   #----------------------
   # 1. Subset Seurat to that cell type
-  #----------------------
-  seu_sub <- subset(seu, subset = cluster_annot == celltype)
-  message("Cells in this cell type: ", ncol(seu_sub))
-  if (ncol(seu_sub) < 50) warning("Very few cells — PCA & DGE may be unstable.")
+
+  seu <- subset(seu, subset = orig.ident != "COUPOE-PP-POS1")
+  #seu_sub <- subset(seu, subset = cluster_annot == celltype)
+  message("Cells in this cell type: ", ncol(seu))
+  if (ncol(seu) < 50) warning("Very few cells — PCA & DGE may be unstable.")
   
   #----------------------
   # 2. Convert to SCE
   #----------------------
-  sce <- as.SingleCellExperiment(seu_sub, assay = assay_name)
+  sce <- as.SingleCellExperiment(seu, assay = assay_name)
   
   
   meta <- as.data.frame(colData(sce))
@@ -299,6 +302,71 @@ meta_out <- meta %>%
 ```
 
 
+diagnostic
+```{r}
+pb_sce <- pseudobulk_celltype(seu)
+pb_sce <- runPCA(pb_sce, exprs_values = "logcounts", ncomponents = 5)
+```
+
+
+
+
+```{r}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "pseudo_rep", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "ncells", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "libsize", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+#plotReducedDim(pb_sce, "PCA", colour_by = "cell_annot")
+```
+
+```{r, fig.width=13, fig.height=6}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    ) +plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+```
+
+```{r}
+mat <- assay(pb_sce, "logcounts")
+batch <- pb_sce$orig.ident
+
+mat_corrected <- removeBatchEffect(mat, batch=batch)
+pc <- prcomp(t(mat_corrected))
+df <- data.frame(
+  PC1 = pc$x[,1],
+  PC2 = pc$x[,2],
+  condition = pb_sce$condition,
+  orig.ident = pb_sce$orig.ident
+)
+
+#library(ggplot2)
+ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
+  geom_point(size=4) + 
+  theme(legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+```
+
+
 ```{r}
 
 #from pb make metadata,design matrix, dge list , filter, norm,disp and GLM
@@ -350,7 +418,7 @@ dge_prepare <- function(pb) {
 
 ##DGE
 ```{r}
-pb_pcv <- pseudobulk_celltype(seu, celltype = "CapEC Ifn")
+pb_pcv <- pseudobulk_celltype(seu, celltype = "TrEC")
 pcv_dge <- dge_prepare(pb_pcv)
 
 
@@ -366,17 +434,17 @@ design <- pcv_dge$design
 c_oe_wt <- makeContrasts(conditionOE - conditionWT, levels = design)
 res_oe_wt <- glmLRT(fit, contrast=c_oe_wt)
 deg_oe_wt <- topTags(res_oe_wt, n = Inf)$table
-# 
+
 # 2. KO vs WT
 c_ko_wt <- makeContrasts(conditionKO - conditionWT, levels = design)
 res_ko_wt <- glmLRT(fit,contrast= c_ko_wt)
 deg_ko_wt <- topTags(res_ko_wt, n = Inf)$table
-# 
+
 # 3. CRE_CTRL vs WT
 c_cc_wt <- makeContrasts(conditionCRE_CTRL - conditionWT, levels = design)
 res_cc_wt <- glmLRT(fit,contrast= c_cc_wt)
 deg_cc_wt <- topTags(res_cc_wt, n = Inf)$table
-# 
+
 # 4. OE vs KO
 c_oe_ko <- makeContrasts(conditionOE - conditionKO, levels = design)
 res_oe_ko <- glmLRT(fit,contrast= c_oe_ko)
@@ -396,105 +464,9 @@ deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
 ```
 
 
-
-
-CRE_CTRL vs WT i j wanna see 
-
-
-```{r}
-# 
-write.csv(deg_cc_wt,
-          file.path(celltype_dir, "deg_cc_wt.csv"),
-          row.names = TRUE)
-
-# How many significant genes?
-sig_genes <- deg_cc_wt %>% filter(FDR < 0.05)
-nrow(sig_genes)
-# Output: xxx significant genes
-
-# How many up vs down?
-table(sig_genes$logFC > 0)
-# FALSE (down in OE): xxx
-# TRUE (up in OE): xxx
-```
-
-```{r}
-# Significant DE genes
-sig_deg <- deg_cc_wt %>% 
-  filter(FDR < 0.05) 
-
-# Up and down separately (optional)
-up_deg <- sig_deg %>% filter(logFC > 0)
-down_deg <- sig_deg %>% filter(logFC < 0)
-
-# 
-# library(AnnotationDbi)
-# 
-# library(org.Mm.eg.db)
-# library(clusterProfiler)
-
-gene_symbols <- rownames(sig_deg)
-
-entrez_ids <- bitr(
-  gene_symbols,
-  fromType = "SYMBOL",
-  toType = "ENTREZID",
-  OrgDb = org.Mm.eg.db
-)
-
-sig_deg_entrez <- sig_deg %>% 
-  mutate(SYMBOL = rownames(sig_deg)) %>%
-  inner_join(entrez_ids, by = "SYMBOL")
-
-
-ego_bp <- enrichGO(
-  gene          = sig_deg_entrez$ENTREZID,
-  OrgDb         = org.Mm.eg.db,
-  keyType       = "ENTREZID",
-  ont           = "BP",
-  pAdjustMethod = "fdr",
-  pvalueCutoff  = 0.05,
-  readable      = TRUE
-)
-
-
-write.csv(ego_bp,
-          file.path(celltype_dir, "ego_bp_deg_cc_wt.csv"),
-          row.names = FALSE)
-
-
-head(ego_bp)
-
-```
-
-```{r, fig.height=9, fig.width=14}
-#this is by padj
-b <- barplot(ego_bp, showCategory = 20)
-d <- dotplot(ego_bp, showCategory = 20)
-save_pub(plot =b, filename="barplot_GO_deg_cc_wt", width=14, height=9)
-save_pub(plot =d, filename="dotplot_GO_deg_wt_wt", width=14, height=9)
-```
-
-
 OE WT
 
 
-```{r}
-# 
-write.csv(deg_oe_wt,
-          file.path(celltype_dir, "deg_oe_wt.csv"),
-          row.names = TRUE)
-
-# How many significant genes?
-sig_genes <- deg_oe_wt %>% filter(FDR < 0.05)
-nrow(sig_genes)
-# Output: xxx significant genes
-
-# How many up vs down?
-table(sig_genes$logFC > 0)
-# FALSE (down in OE): xxx
-# TRUE (up in OE): xxx
-```
 
 OE WT
 
@@ -521,10 +493,11 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 91
+[1] 292
 
 FALSE  TRUE 
-   46    45 
+  121   171 
+
 ```{r}
 #ibrary(dplyr)
 
@@ -565,7 +538,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'OE vs WT (CapEC Ifn)',
+  title = 'OE vs WT (TrEC)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -591,15 +564,32 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = 'OE vs WT - CapEC Ifn'
+  title = 'OE vs WT - Adhesion Molecules'
 )
 
-save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot_capifn", width = 9,height=7)
+save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
 ```
+
+
+
+```{r}
+# Subset by cell type (example: CRP)
+crp <- subset(seu, idents = "CRP")
+
+# Violin plot of a feature split by condition
+VlnPlot(
+  object = crp,
+  features = "Cd31",
+  group.by = "condition",
+  pt.size = 0
+)
+
+```
+
 
 ```{r, fig.width=9, fig.height=7}
 # Genes you care about
-goi <- c("Madcam1", "St6gal1","Nr2f2" ,"Nkx2-3", "Ccl21a","Ubd", "Fut7", "Oit1", "Clu" ,"Vwf" ,"Selp", "Vcam1", "Glycam1", "Icam1")
+goi <- c("Madcam1", "St6gal1" ,"Nkx2-3", "Ccl21a","Ubd", "Fut7", "Oit1", "Clu" ,"Vwf" ,"Selp", "Sele", "Vcam1", "Glycam1", "Icam1","Nr2f2")
          #addressin                                                   
 
 p <- EnhancedVolcano(
@@ -613,10 +603,10 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = '? OE vs WT'
+  title = 'Is There Reprogramming of CRP to HEV? OE vs WT'
 )
 
-save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
+save_pub(plot=p,filename= "degcrpreprog", width = 9,height=7)
 ```
 
 
@@ -648,7 +638,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CapEC Ifn: OE vs WT"
+  main = "Top 50 DEGs for CapEC2: OE vs WT"
 )
 
 p
@@ -715,6 +705,18 @@ d <- dotplot(ego_bp, showCategory = 20)
 save_pub(plot =b, filename="barplot_GO_deg_oe_wt", width=14, height=9)
 save_pub(plot =d, filename="dotplot_GO_deg_oe_wt", width=14, height=9)
 ```
+```{r, fig.height=14}
+d <- dotplot(ego_bp, showCategory = 20) +
+  theme(
+    axis.text.y  = element_text(size = 22, face = "bold"),  # bigger + bold
+    axis.text.x  = element_text(size = 22, face = "bold"),  # bigger + bold
+    legend.title = element_text(size = 22, face = "bold"),  # legend title
+    legend.text  = element_text(size = 22),                 # legend labels
+  )
+
+d
+save_pub(plot=d, filename ="crpora",width = 12, height=14)
+```
 
 
 
@@ -734,7 +736,7 @@ ranks <- deg_oe_wt$logFC
 names(ranks) <- rownames(deg_oe_wt)
 ranks <- sort(ranks, decreasing = TRUE)
 
-msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
+#msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
 
 c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
 
@@ -771,29 +773,16 @@ fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
 
 top_ets <- head(fgsea_ets, 20)
 top_ets
-p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
-  geom_point(aes(size = -log10(padj), color = NES)) +
-  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
-  labs(
-    title = "ETS-related enrichment CapEC lfn (OE vs WT)",
-    x = "Normalized Enrichment Score (NES)",
-    y = "ETS target sets",
-    size = "-log10(FDR)"
-  ) +
-  theme_bw()
 
-save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 
 
 ```
-
-name correction
 ```{r}
 p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC lfn (OE vs WT)",
+    title = "ETS-related enrichment CRP (OE vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -804,11 +793,12 @@ save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 ```
 
 
-Absolutely no relevant enrichment in Capec lfn oe v wt!
+Absolutely no relevant enrichment in CRP oe v wt!
 
 
 
 ```{r}
+
 fgsea_kegg_full <- fgsea(
   pathways = kegg_gs,
   stats    = ranks,
@@ -839,8 +829,6 @@ write.csv(
   row.names = FALSE
 )
 ```
-Nothing. so we will just move on we have all we need for cap Ifn.
-
 ```{r}
 
 
@@ -857,18 +845,42 @@ ranks_entrez <- ranks
 names(ranks_entrez) <- mapped_ids
 ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
-old <- getwd()
-setwd(celltype_dir)
+# old <- getwd()
+# setwd(celltype_dir)
+# 
+# pathview(
+#   gene.data  = ranks_entrez,# will create this below
+#   pathway.id = "mmu04218",     # your enriched KEGG pathway
+#   species    = "mmu",
+#   out.suffix =  "OE_vs_WT"
+# )
+# setwd(old)
 
-pathview(
-  gene.data  = ranks_entrez,# will create this below
-  pathway.id = "mmu04218",     # your enriched KEGG pathway
-  species    = "mmu",
-  out.suffix =  "OE_vs_WT"
-)
-setwd(old)
+
+
 ```
 
+
+
+```{r}
+
+old <- getwd()
+setwd(celltype_dir)
+kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
+
+for (pid in kegg_ids) {
+  message("Running Pathview for: ", pid, " (OE_vs_WT)")
+
+  pathview(
+    gene.data  = ranks_entrez,
+    pathway.id = pid,
+    species    = "mmu",
+    out.suffix = paste0("OE_vs_WT_crp", pid)
+  )
+}
+
+setwd(old)
+```
 
 What it does: Creates dot plot of top 20 ETS-related pathways
 How to interpret:
@@ -937,7 +949,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (CapEC Ifn)',
+  title = 'KO vs WT (CapEC2)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -965,7 +977,7 @@ p <- EnhancedVolcano(
   title = 'KO vs WT - Adhesion Molecules'
 )
 
-save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot_capifn", width = 9,height=7)
+save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
 ```
 
 The KO doesnt even seem to have been knoacked out properly!! Or just that we are not observing enough of each in it ot be significant. So we will NOT proceed with the rest of the analysis.
@@ -1512,6 +1524,8 @@ names(ranks_entrez) <- mapped_ids
 ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
 ```
+
+
 ```{r}
 kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
 

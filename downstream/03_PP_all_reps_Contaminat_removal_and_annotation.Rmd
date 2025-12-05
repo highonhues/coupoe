@@ -83,7 +83,7 @@ fib_ret <- c("Pdpn","Ccl19","Pdgfra")
 
 # cell markers
 
-hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1")
+hev_markers <- c("St6gal1", "Glycam1", "Chst4", "Ccl21a", "Madcam1", "Fut7")
 art_markers <- c("Bmx", "Depp1", "Gja4", "Gja5", "Gkn3", "Sox17")
 CRP_markers <- c("Angpt2", "Apln", "Esm1", "Mcam", "Nid2", "Pdgfb", "Pgf", "Vim")
 PCV_markers <- c("Ackr1", "Icam1", "Nr2f2", "Sele", "Selp", "Vcam1", "Vwf")
@@ -92,8 +92,8 @@ CapEC2_marker <- c("Atf3", "Cxcl1", "Egr1", "Fos", "Fosb", "Jun", "Junb", "Jund"
 CapEC1_marker <- c("Col4a1", "Col4a2", "Hlx", "Id1", "Id3", "Igfbp3")
 art_vn_markers <- c("Edn1", "Eln", "Fbln5", "Foxn3", "Klf4", "Ltbp4", "Ptprb")
 
-
-```
+capifn <- c("Irf7", "Cxcl10","Ifit1" ,"Ackr1") #Ackr1 nahi hona chaiye in non Vn
+``` 
 
 ```{r}
 library(Cairo)
@@ -390,6 +390,12 @@ saveRDS(
 #seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
 ```
 
+```{r}
+
+# Load it back
+seu <- readRDS(file.path(rds_dir, "seu_pp_subset_after_umap.rds"))
+```
+
 
 ```{r}
 #Diagnostic Resolution
@@ -399,7 +405,7 @@ seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
 
 ```{r Find best cluster resolution,fig.height=8,fig.width=10}
 
-clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+p <- clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
   theme(
     plot.title = element_text(
       hjust = 0.5,       # centers the title
@@ -408,8 +414,16 @@ clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta
   )
 ```
 
+
+```{r}
+save_pub(plot=p,filename= "inires",width=10,height=8)
+```
+
+
+
 ```{r,fig.height=15,fig.width=7}
-Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+p <- Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+save_pub(plot=p,filename= "inires",width=7,height=15)
 ```
 
 I will stick with 0.2 most prolly but the weird sample split I wanna see whats going on. 0.1 clust becomes 8 + 
@@ -506,6 +520,13 @@ Idents(seu_obj) <- "RNA_snn_res.0.2"
 
 ```{r,fig.width=9}
 FeaturePlot(seu_obj,c("Apln","Angpt2","Pgf"),label=T)
+```
+
+
+```{r}
+p <- FeaturePlot(seu_obj,hev_markers,label=T)
+save_pub(plot=p, filename = "hevini",width=8,height=8)
+#FeaturePlot(seu_obj,PCV_markers,label=T)
 ```
 
 ```{r,fig.height=8,fig.width=8}
