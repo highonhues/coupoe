@@ -204,16 +204,17 @@ Important to create cell type pseudobulk
 pseudobulk_celltype <- function(
   seu, 
   celltype, 
-  n_pseudo = 3,
+  n_pseudo = 2,
   assay_name = "RNA",
-  oe_samples = c("COUPOE-PP-POS1", "COUPOE-PP1", "COUPOE-PP2"),
+  oe_samples = c("COUPOE-PP1", "COUPOE-PP2"),
   seed = 1234
 ) {
    
   #----------------------
   # 1. Subset Seurat to that cell type
   #----------------------
-  seu_sub <- subset(seu, subset = cluster_annot == celltype)
+  seu <- subset(seu, subset = orig.ident != "COUPOE-PP-POS1")
+  seu_sub <- subset(seu_sub, subset = cluster_annot == celltype)
   message("Cells in this cell type: ", ncol(seu_sub))
   if (ncol(seu_sub) < 50) warning("Very few cells — PCA & DGE may be unstable.")
   
@@ -312,10 +313,10 @@ dge_prepare <- function(pb) {
     dplyr::select(pb_id, condition, pseudo_rep)
   
   meta$condition <- factor(meta$condition)
-  meta$pseudo_rep <- factor(meta$pseudo_rep)
+  #meta$pseudo_rep <- factor(meta$pseudo_rep)
   
   # Design matrix (no intercept)
-  design <- model.matrix(~ 0 + condition + pseudo_rep , data = meta)
+  design <- model.matrix(~ 0 + condition  , data = meta)
   
   # Build DGEList using raw pseudobulk counts
   y <- DGEList(
@@ -399,7 +400,12 @@ deg_oe_wt <- topTags(res_oe_wt, n = Inf)$table
 
 OE WT
 
+```{r}
+as.data.frame(colData(pb_pcv)) %>%
+  arrange(ncells) %>%
+  select(pb_id, orig.ident, condition, pseudo_rep, ncells)
 
+```
 
 OE WT
 
@@ -426,10 +432,10 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 313
+[1] 350
 
 FALSE  TRUE 
-  150   163 
+  188   162 
 
 ```{r}
 #ibrary(dplyr)
@@ -541,7 +547,7 @@ save_pub(plot=p,filename= "degcrpreprog", width = 9,height=7)
 
 
 
-
+well nr2f2 also not significantly expressed damn bro we r in the trenches
 ```{r,fig.height=9,fig.width=11}
 library(pheatmap)
 
@@ -568,7 +574,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CapEC2: OE vs WT"
+  main = "Top 50 DEGs for CRP: OE vs WT"
 )
 
 p
