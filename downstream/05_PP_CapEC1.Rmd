@@ -1324,7 +1324,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'OE vs KO (HEV)',
+  title = 'OE vs KO (CapEC1)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -1383,7 +1383,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CAPEC2: OE vs KO"
+  main = "Top 50 DEGs for CAPEC1: OE vs KO"
 )
 
 p
@@ -1567,7 +1567,7 @@ ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
 ```
 
-
+not doing this
 ```{r}
 kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
 
