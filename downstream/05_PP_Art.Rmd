@@ -1,0 +1,1595 @@
+---
+title: "05_PP_CapEC2"
+author: "Ananya Gupta"
+date: "2025-11-26"
+output: html_document
+---
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(pheatmap)
+library(batchelor)
+library(patchwork)
+library(plotly)
+library(gprofiler2)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(glue)
+library(msigdbr)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(scater)
+library(metap)
+library(future)
+library(parallelly)
+library(scuttle)
+library(SingleCellExperiment)
+library(edgeR)
+library(limma)
+library(EnhancedVolcano)
+library(fgsea)
+library(KEGGREST)
+library(pathview)
+library(AnnotationDbi)
+
+library(org.Mm.eg.db)
+library(clusterProfiler)
+plan(multicore, workers = 8)
+
+
+#for parallelization
+options(future.globals.maxSize = 8000 * 1024^2) 
+#options(future.globals.maxSize = 1e9) was abt 1GB
+
+
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r dir setup, include=FALSE}
+base_dir <- "PP_outputs"
+
+# Define output directories
+rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
+fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
+celltype_dir <- file.path(base_dir, "PP_Artery")
+dir.create(celltype_dir, showWarnings = FALSE, recursive = TRUE)
+
+
+# Create folders if they don't exist
+dir.create(base_dir, showWarnings = FALSE)
+dir.create(rds_dir, showWarnings = FALSE)
+dir.create(fig_dir, showWarnings = FALSE)
+```
+this is the newer one
+```{r}
+library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(celltype_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(celltype_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+
+```
+
+
+```{r}
+seu <- readRDS(file.path(rds_dir, "seu_pp_7BEC_process_04res.rds"))
+```
+
+
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "CapEC2"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Cap Ifn"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "CapEC1"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pre-Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele-"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Barrier EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "CRP"
+
+Before doing DGE, you should aggregate (combine) the expression values of cells from the same sample and the same cell type — using either sum, mean, or a mixed-model random effect. This aggregation step is called pseudobulk, and it is necessary because cells inside the same sample are correlated (not independent).
+
+Lets start with HEV
+
+
+```{r,fig.width=14,fig.height=5}
+an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot") + ggtitle("Annotated Peyers Patches") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+an
+```
+
+
+
+```{r}
+ets_family_genes <- c(
+  "Ehf", "Elf1", "Elf2", "Elf3", "Elf4", "Elf5",
+  "Elk1", "Elk3", "Elk4",
+  "Erf", "Erg",
+  "Ets1", "Ets2",
+  "Etv1", "Etv2", "Etv4", "Etv5", "Etv6",
+  "Fli1",
+  "Gabpa", "Gabpb1", "Gabpb2",
+  "Spdef",
+  "Spi1", "Spib", "Spic"
+)
+# 
+# all_paths <- keggList("pathway", "mmu")
+# 
+```
+
+kegg_gs is genes for each mouse pathway that we grab.
+$mmu04670
+[1] "Gene1" "Gene2" "Gene3" ...
+
+$mmu04066
+  [1] "Gm30155"  "Gm34005"  "Ldhal6b"  "Camk2d"   "Egln1"    "Egln2"    "Egln3"    "Gm29667"  "Angpt1"   "Angpt2"  
+ [11] "Angpt4"   "Akt1"     "Akt2"     "Aldoa"    "Aldoc"    "Arnt"     "Bcl2"     "Camk2a"   "Camk2b"  
+```{r}
+#saveRDS(kegg_gs, file = "kegg_gs_mouse.rds")
+kegg_gs <- readRDS("kegg_gs_mouse.rds")
+
+```
+
+```{r}
+#saveRDS(msig_c3, file = "msig_c3.rds")
+msig_c3 <- readRDS("msig_c3.rds")
+
+```
+
+Important to create cell type pseudobulk
+
+
+```{r}
+pseudobulk_celltype <- function(
+  seu, 
+  celltype, 
+  n_pseudo = 2,
+  assay_name = "RNA",
+  oe_samples = c("COUPOE-PP1", "COUPOE-PP2"),
+  seed = 1234
+) {
+   
+  #----------------------
+  # 1. Subset Seurat to that cell type
+  #----------------------
+  seu_sub <- subset(seu, subset = orig.ident != "COUPOE-PP-POS1")
+  seu_sub <- subset(seu_sub, subset = cluster_annot == celltype)
+  message("Cells in this cell type: ", ncol(seu_sub))
+  if (ncol(seu_sub) < 50) warning("Very few cells — PCA & DGE may be unstable.")
+  
+  #----------------------
+  # 2. Convert to SCE
+  #----------------------
+  sce <- as.SingleCellExperiment(seu_sub, assay = assay_name)
+  
+  
+  meta <- as.data.frame(colData(sce))
+  meta$cell <- rownames(meta)
+  
+  set.seed(seed)
+  
+  
+meta_out <- meta %>%
+  group_by(orig.ident) %>%
+  do({
+    df <- .
+    
+    if (df$orig.ident[1] %in% oe_samples) {
+      # Assign pseudo_rep = position in oe_samples
+      rep_index <- match(df$orig.ident[1], oe_samples)
+      df$pseudo_rep <- rep_index
+    } else {
+      # Regular random pseudoreps for WT, KO, CRE_CTRL
+      df$.rand <- sample(seq_len(nrow(df)))
+      df$pseudo_rep <- rep(1:n_pseudo, length.out = nrow(df))[order(df$.rand)]
+    }
+    
+    df
+  }) %>%
+  ungroup()
+
+  colData(sce)$pseudo_rep <- meta_out$pseudo_rep[match(colnames(sce), meta_out$cell)]
+
+  
+  #colData(sce)$pseudo_rep <- meta$pseudo_rep[match(colnames(sce), meta$cell)]
+  
+  #----------------------
+  # 4. Make pseudobulk IDs
+  #----------------------
+  # colData(sce)$pb_id <- with(
+  #   colData(sce),
+  #   paste(orig.ident, paste0("rep", pseudo_rep), sep = "_")
+  # )
+  colData(sce)$pb_id <- ifelse(
+    sce$orig.ident %in% oe_samples,
+    paste0("OE_rep", sce$pseudo_rep),
+    paste0(sce$orig.ident, "_rep", sce$pseudo_rep))
+
+  #----------------------
+  # 5. Aggregate to pseudobulk
+  #----------------------
+  pb <- aggregateAcrossCells(
+    sce,
+    ids = DataFrame(
+      pb_id      = sce$pb_id,
+      orig.ident = sce$orig.ident,
+      condition  = sce$condition,
+      pseudo_rep = sce$pseudo_rep
+    )
+  )
+  colnames(pb) <- pb$pb_id
+
+  # Save raw counts
+  assay(pb, "counts_raw") <- assay(pb, "counts")
+  pb$libsize <- colSums(assay(pb, "counts_raw"))
+  
+  #----------------------
+  # 6. Normalize 
+  #----------------------
+  pb <- logNormCounts(pb)
+
+  
+  #----------------------
+  # 8. Return everything
+  #----------------------
+  return(pb)
+}
+
+```
+
+
+
+diagnostic
+```{r}
+pb_sce <- pseudobulk_celltype(seu, celltype="TrEC")
+#pb_sce <- runPCA(pb_sce, exprs_values = "logcounts", ncomponents = 5)
+```
+
+
+```{r}
+as.data.frame(colData(pb_sce)) %>%
+  arrange(ncells) %>%
+  select(pb_id, orig.ident, condition, pseudo_rep, ncells)
+
+```
+
+
+
+
+```{r}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "pseudo_rep", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "ncells", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+plotReducedDim(pb_sce, "PCA", colour_by = "libsize", point_size=4) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+#plotReducedDim(pb_sce, "PCA", colour_by = "cell_annot")
+```
+
+```{r, fig.width=13, fig.height=6}
+plotReducedDim(pb_sce, "PCA", colour_by = "condition", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    ) +plotReducedDim(pb_sce, "PCA", colour_by = "orig.ident", point_size=6) +theme(
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15)
+    )
+```
+
+```{r}
+mat <- assay(pb_sce, "logcounts")
+batch <- pb_sce$orig.ident
+
+mat_corrected <- removeBatchEffect(mat, batch=batch)
+pc <- prcomp(t(mat_corrected))
+df <- data.frame(
+  PC1 = pc$x[,1],
+  PC2 = pc$x[,2],
+  condition = pb_sce$condition,
+  orig.ident = pb_sce$orig.ident
+)
+
+#library(ggplot2)
+ggplot(df, aes(PC1, PC2, color = condition, shape = orig.ident)) +
+  geom_point(size=4) + 
+  theme(legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+```
+
+```{r}
+seu <- subset(seu, subset = orig.ident != "COUPOE-PP-POS1")
+table(seu$cluster_annot, seu$condition)
+
+
+```
+
+
+```{r}
+
+#from pb make metadata,design matrix, dge list , filter, norm,disp and GLM
+dge_prepare <- function(pb) {
+  # library(edgeR)
+  # library(dplyr)
+  
+  # Metadata extraction
+  meta <- as.data.frame(colData(pb)) %>%
+    dplyr::select(pb_id, condition, pseudo_rep)
+  
+  meta$condition <- factor(meta$condition)
+  meta$pseudo_rep <- factor(meta$pseudo_rep)
+  
+  # Design matrix (no intercept)
+  design <- model.matrix(~ 0 + condition , data = meta)
+  
+  # Build DGEList using raw pseudobulk counts
+  y <- DGEList(
+    counts = assay(pb, "counts_raw"),
+    samples = meta
+  )
+  
+  # Filter lowly expressed genes
+  keep <- filterByExpr(y, design = design)
+  y <- y[keep, , keep.lib.sizes = FALSE]
+  
+  # Normalize (TMM)
+  y <- calcNormFactors(y)
+  
+  # Estimate dispersions
+  y <- estimateDisp(y, design)
+  
+  # Fit GLM
+  fit <- glmFit(y, design)
+  
+  # Return everything needed for contrasts
+  return(list(
+    fit = fit,
+    design = design,
+    y = y,
+    meta = meta
+  ))
+}
+
+```
+
+
+
+##DGE
+```{r}
+pb_pcv <- pseudobulk_celltype(seu, celltype = "Artery")
+pcv_dge <- dge_prepare(pb_pcv)
+
+
+```
+
+
+#pos fc means genes are higher in oe/ko/front neg means higher in wt 
+```{r Contrast}
+fit <- pcv_dge$fit
+design <- pcv_dge$design
+
+# 1. OE vs WT
+c_oe_wt <- makeContrasts(conditionOE - conditionWT, levels = design)
+res_oe_wt <- glmLRT(fit, contrast=c_oe_wt)
+deg_oe_wt <- topTags(res_oe_wt, n = Inf)$table
+
+# 2. KO vs WT
+c_ko_wt <- makeContrasts(conditionKO - conditionWT, levels = design)
+res_ko_wt <- glmLRT(fit,contrast= c_ko_wt)
+deg_ko_wt <- topTags(res_ko_wt, n = Inf)$table
+
+# 3. CRE_CTRL vs WT
+c_cc_wt <- makeContrasts(conditionCRE_CTRL - conditionWT, levels = design)
+res_cc_wt <- glmLRT(fit,contrast= c_cc_wt)
+deg_cc_wt <- topTags(res_cc_wt, n = Inf)$table
+
+# 4. OE vs KO
+c_oe_ko <- makeContrasts(conditionOE - conditionKO, levels = design)
+res_oe_ko <- glmLRT(fit,contrast= c_oe_ko)
+deg_oe_ko <- topTags(res_oe_ko, n = Inf)$table
+# 
+# # 5. OE vs CRE_CTRL
+# c_oe_cc <- makeContrasts(conditionOE - conditionCRE_CTRL, levels = design)
+# res_oe_cc <- glmLRT(fit, contrast=c_oe_cc)
+# deg_oe_cc <- topTags(res_oe_cc, n = Inf)$table
+# 
+# # 6. KO vs CRE_CTRL
+# c_ko_cc <- makeContrasts(conditionKO - conditionCRE_CTRL, levels = design)
+# res_ko_cc <- glmLRT(fit,contrast= c_ko_cc)
+# deg_ko_cc <- topTags(res_ko_cc, n = Inf)$table
+
+
+```
+
+
+OE WT
+
+
+
+OE WT
+
+log2fc = higher in oe, neg in wt, cpm is higher for more abundant gene, lr =test stat, bigger stronger evidence
+
+```{r}
+head(deg_oe_wt)
+```
+
+
+```{r}
+# 
+write.csv(deg_oe_wt,
+          file.path(celltype_dir, "deg_oe_wt.csv"),
+          row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_oe_wt %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
+1] 611
+
+FALSE  TRUE 
+  276   335 
+```{r}
+#ibrary(dplyr)
+
+# Top 20 OE-upregulated genes
+top_up <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in OE)
+top_down <- deg_oe_wt %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_oe_wt_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_oe_wt_top20_down.csv"),
+          row.names = TRUE)
+
+```
+
+
+
+
+Viz
+
+```{r,fig.width=9,fig.height=7}
+p <- EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,     # log2 fold change cutoff of ±1
+  pointSize = 2.0,
+  labSize = 5,
+  #col = c('grey30', 'grey30', 'royalblue', 'red2'),
+  title = 'OE vs WT (Artery)',
+  subtitle = 'DEG Volcano Plot',
+  caption = 'Right = Upregulated | Left = Downregulated',
+  legendPosition = 'right'
+)
+p
+save_pub(plot=p,filename= "deg_oe_wt_EVplot", width = 9,height=7)
+```
+
+
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",  "Cadm1","Clec2d",   "Ccl21","Sele", "Ephb4" ,"Selp", "Vcam1", "Glycam1", "Icam1")
+         #addressin                 #tf                                  #general pcv/hev genes
+
+p <- EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'OE vs WT - Adhesion Molecules Artery'
+)
+
+save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
+```
+
+
+
+```{r}
+# Subset by cell type (example: CRP)
+crp <- subset(seu, idents = "CRP")
+
+# Violin plot of a feature split by condition
+VlnPlot(
+  object = crp,
+  features = "Cd31",
+  group.by = "condition",
+  pt.size = 0
+)
+
+```
+
+
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1" ,"Nkx2-3", "Ccl21a","Ubd", "Fut7","Ltb", "Oit1", "Clu" ,"Vwf" ,"Selp", "Sele", "Vcam1", "Glycam1", "Icam1","Nr2f2")
+         #addressin                                                   
+
+p <- EnhancedVolcano(
+  deg_oe_wt,
+  lab = rownames(deg_oe_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'Is There Reprogramming of CapEC2 to HEV? OE vs WT'
+)
+
+save_pub(plot=p,filename= "deg_oewtec2reprog", width = 9,height=7)
+```
+
+
+
+
+```{r,fig.height=9,fig.width=11}
+library(pheatmap)
+
+# Get top 50 DEGs
+top_degs <- deg_oe_wt %>%
+  filter(FDR < 0.05) %>%
+  arrange(FDR) %>%
+  head(50)
+
+# Extract normalized counts for these genes
+library(edgeR)
+norm_counts <- cpm(pcv_dge$y, log = TRUE)  # Log-CPM normalized
+top_genes_mat <- norm_counts[rownames(top_degs), ]
+
+# Create heatmap
+p <- pheatmap(
+  top_genes_mat,
+  scale = "row",              # Z-score scaling
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  annotation_col = data.frame(
+    Condition = pcv_dge$meta$condition,
+    row.names = colnames(top_genes_mat)
+  ),
+  main = "Top 50 DEGs for Art: OE vs WT"
+)
+
+p
+save_pub(plot=p, filename ="heatmap_deg_oe_wt",width = 11, height=9)
+```
+
+
+GO enrichment using ORA
+take significant deg, convert to entrez id and check if the sig genes are over represented in GO (biological processes)
+
+```{r}
+# Significant DE genes
+sig_deg <- deg_oe_wt %>% 
+  filter(FDR < 0.05) 
+
+# Up and down separately (optional)
+up_deg <- sig_deg %>% filter(logFC > 0)
+down_deg <- sig_deg %>% filter(logFC < 0)
+
+# 
+# library(AnnotationDbi)
+# 
+# library(org.Mm.eg.db)
+# library(clusterProfiler)
+
+gene_symbols <- rownames(sig_deg)
+
+entrez_ids <- bitr(
+  gene_symbols,
+  fromType = "SYMBOL",
+  toType = "ENTREZID",
+  OrgDb = org.Mm.eg.db
+)
+
+sig_deg_entrez <- sig_deg %>% 
+  mutate(SYMBOL = rownames(sig_deg)) %>%
+  inner_join(entrez_ids, by = "SYMBOL")
+
+
+ego_bp <- enrichGO(
+  gene          = sig_deg_entrez$ENTREZID,
+  OrgDb         = org.Mm.eg.db,
+  keyType       = "ENTREZID",
+  ont           = "BP",
+  pAdjustMethod = "fdr",
+  pvalueCutoff  = 0.05,
+  readable      = TRUE
+)
+
+
+write.csv(ego_bp,
+          file.path(celltype_dir, "ego_bp_deg_oe_wt.csv"),
+          row.names = FALSE)
+
+
+head(ego_bp)
+
+```
+
+```{r, fig.height=9, fig.width=14}
+#this is by padj
+b <- barplot(ego_bp, showCategory = 20)
+d <- dotplot(ego_bp, showCategory = 20)
+save_pub(plot =b, filename="barplot_GO_deg_oe_wt", width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_oe_wt", width=14, height=9)
+```
+
+```{r, fig.height=14}
+d <- dotplot(ego_bp, showCategory = 10) +
+  theme(
+    axis.text.y  = element_text(size = 24, face = "bold"),  # bigger + bold
+    axis.text.x  = element_text(size = 22, face = "bold"),  # bigger + bold
+    legend.title = element_text(size = 22, face = "bold"),  # legend title
+    legend.text  = element_text(size = 22),axis.text.y.left = element_text(margin = margin(r = 15))                 # legend labels
+  )
+
+d
+save_pub(plot=d, filename ="oewtcapecora",width = 12, height=14)
+```
+
+
+
+fsgea
+1.Ranks all genes by logfc more up in oe at top and most up in wt at the bottom
+2. MsigBS gene set c3 is TF target geens, C2 is kegg, reactome etc
+3.Filter for ets related pathways
+4.NES (Normalized Enrichment Score):
+
+Positive NES: Gene set enriched in upregulated genes (OE has more)
+Negative NES: Gene set enriched in downregulated genes (WT has more)
+Magnitude matters: |NES| > 2 is strong, > 1.5 is moderate
+
+
+```{r}
+ranks <- deg_oe_wt$logFC
+names(ranks) <- rownames(deg_oe_wt)
+ranks <- sort(ranks, decreasing = TRUE)
+
+#msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
+
+c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
+
+fgsea_ets <- fgsea(
+  pathways = c3_tft,
+  stats = ranks,
+  minSize = 10,
+  maxSize = 500
+)
+
+fgsea_ets$leadingEdge <- sapply(fgsea_ets$leadingEdge, paste, collapse = ",")
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_oe_wt.csv"),
+  row.names = FALSE
+)
+
+# ------------------------------------------------
+fgsea_ets <- fgsea_ets[
+  grep("^(ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG)", fgsea_ets$pathway),
+]
+
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_only_deg_oe_wt.csv"),
+  row.names = FALSE
+)
+
+# FDR filter + order (your minimal fixes)
+#fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.26, ]
+fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
+
+top_ets <- head(fgsea_ets, 20)
+top_ets
+
+
+
+```
+
+
+```{r}
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment Artery (OE vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
+```
+
+
+Absolutely no relevant enrichment in art oe v wt!
+
+
+
+```{r}
+ranks <- deg_oe_wt$logFC
+names(ranks) <- rownames(deg_oe_wt)
+ranks <- sort(ranks, decreasing = TRUE)
+
+fgsea_kegg_full <- fgsea(
+  pathways = kegg_gs,
+  stats    = ranks,
+  minSize  = 10,
+  maxSize  = 500
+)
+fgsea_kegg_full <- fgsea_kegg_full[order(fgsea_kegg_full$padj), ]
+
+## 5. Count how many ETS TFs each KEGG pathway contains
+fgsea_kegg_full$n_ets <- sapply(
+  fgsea_kegg_full$pathway,
+  function(p) length(intersect(kegg_gs[[p]], ets_family_genes))
+)
+
+
+## 6. Keep KEGG pathways that:
+##    (a) are enriched (FDR < 0.25)
+##    (b) contain >= 1 ETS TF gene
+ets_kegg <- subset(fgsea_kegg_full, padj < 0.25 & n_ets > 0)
+ets_kegg <- ets_kegg[order(ets_kegg$padj), ]
+
+ets_kegg
+
+ets_kegg$leadingEdge <- sapply(ets_kegg$leadingEdge, paste, collapse = ",")
+write.csv(
+  ets_kegg,
+  file.path(celltype_dir, "ets_kegg_fsgea_deg_oe_wt.csv"),
+  row.names = FALSE
+)
+```
+```{r}
+
+
+# convert SYMBOL -> ENTrez
+mapped_ids <- mapIds(
+  org.Mm.eg.db,
+  keys = names(ranks),
+  column = "ENTREZID",
+  keytype = "SYMBOL",
+  multiVals = "first"
+)
+
+ranks_entrez <- ranks
+names(ranks_entrez) <- mapped_ids
+ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
+
+# old <- getwd()
+# setwd(celltype_dir)
+# 
+# pathview(
+#   gene.data  = ranks_entrez,# will create this below
+#   pathway.id = "mmu04218",     # your enriched KEGG pathway
+#   species    = "mmu",
+#   out.suffix =  "OE_vs_WT"
+# )
+# setwd(old)
+
+
+
+```
+
+nothing
+
+```{r}
+
+old <- getwd()
+setwd(celltype_dir)
+kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
+
+for (pid in kegg_ids) {
+  message("Running Pathview for: ", pid, " (OE_vs_WT)")
+
+  pathview(
+    gene.data  = ranks_entrez,
+    pathway.id = pid,
+    species    = "mmu",
+    out.suffix = paste0("OE_vs_WT_art", pid)
+  )
+}
+
+setwd(old)
+```
+
+What it does: Creates dot plot of top 20 ETS-related pathways
+How to interpret:
+
+X-axis: NES (right = upregulated in OE, left = upregulated in WT)
+Dot size: Significance (bigger = more significant)
+Dot color: Same as NES (red = up in OE, blue = up in WT)
+
+
+
+KO WT
+
+```{r}
+# 
+write.csv(deg_ko_wt,
+           file.path(celltype_dir, "deg_ko_wt.csv"),
+           row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_ko_wt %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
+1] 611
+
+FALSE  TRUE 
+  276   335 
+  
+```{r}
+#ibrary(dplyr)
+
+# Top 20 ko-upregulated genes
+top_up <- deg_ko_wt %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in ko)
+top_down <- deg_ko_wt %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_ko_wt_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_ko_wt_top20_down.csv"),
+          row.names = TRUE)
+
+```
+
+viz
+
+```{r,fig.width=9,fig.height=7}
+p <- EnhancedVolcano(
+  deg_ko_wt,
+  lab = rownames(deg_ko_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,     # log2 fold change cutoff of ±1
+  pointSize = 2.0,
+  labSize = 5,
+  #col = c('grey30', 'grey30', 'royalblue', 'red2'),
+  title = 'KO vs WT (Artery)',
+  subtitle = 'DEG Volcano Plot',
+  caption = 'Right = Upregulated | Left = Downregulated',
+  legendPosition = 'right'
+)
+p
+save_pub(plot=p,filename= "deg_ko_wt_EVplot", width = 9,height=7)
+```
+
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1","Ly6c",     "Nr2f2" ,"Nkx2-3", "Hey1",     "Ccl21","Sele", "Ephb4" ,"Selp", "Vcam1", "Glycam1", "Icam1", "Ltb")
+         #addressin                 #tf                                  #general pcv/hev genes
+
+p <- EnhancedVolcano(
+  deg_ko_wt,
+  lab = rownames(deg_ko_wt),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'KO vs WT - Adhesion Molecules Artery'
+)
+
+save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
+```
+
+The KO doesnt even seem to have been knoacked out properly!! Or just that we are not observing enough of each in it ot be significant. So we will NOT proceed with the rest of the analysis.
+
+```{r,fig.height=9,fig.width=11}
+library(pheatmap)
+
+# Get top 50 DEGs
+top_degs <- deg_ko_wt %>%
+  filter(FDR < 0.05) %>%
+  arrange(FDR) %>%
+  head(50)
+
+# Extract normalized counts for these genes
+#library(edgeR)
+norm_counts <- cpm(pcv_dge$y, log = TRUE)  # Log-CPM normalized
+top_genes_mat <- norm_counts[rownames(top_degs), ]
+
+# Create heatmap
+p <- pheatmap(
+  top_genes_mat,
+  scale = "row",              # Z-score scaling
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  annotation_col = data.frame(
+    Condition = pcv_dge$meta$condition,
+    row.names = colnames(top_genes_mat)
+  ),
+  main = "Top 50 DEGs for CapEC2: KO vs WT"
+)
+
+p
+save_pub(plot=p, filename ="heatmap_deg_ko_wt",width = 11, height=9)
+```
+
+
+GO for KO vs WT
+
+
+```{r}
+# Significant DE genes
+sig_deg <- deg_ko_wt %>% 
+  filter(FDR < 0.05) 
+
+# Up and down separately (optional)
+up_deg <- sig_deg %>% filter(logFC > 0)
+down_deg <- sig_deg %>% filter(logFC < 0)
+
+# 
+# library(AnnotationDbi)
+# 
+# library(org.Mm.eg.db)
+# library(clusterProfiler)
+
+gene_symbols <- rownames(sig_deg)
+
+entrez_ids <- bitr(
+  gene_symbols,
+  fromType = "SYMBOL",
+  toType = "ENTREZID",
+  OrgDb = org.Mm.eg.db
+)
+
+sig_deg_entrez <- sig_deg %>% 
+  mutate(SYMBOL = rownames(sig_deg)) %>%
+  inner_join(entrez_ids, by = "SYMBOL")
+
+
+ego_bp <- enrichGO(
+  gene          = sig_deg_entrez$ENTREZID,
+  OrgDb         = org.Mm.eg.db,
+  keyType       = "ENTREZID",
+  ont           = "BP",
+  pAdjustMethod = "fdr",
+  pvalueCutoff  = 0.05,
+  readable      = TRUE
+)
+
+head(ego_bp)
+
+write.csv(ego_bp,
+          file.path(celltype_dir, "ego_bp_deg_ko_wt.csv"),
+          row.names = FALSE)
+```
+
+```{r, fig.height=9, fig.width=14}
+#this is by padj
+b <- barplot(ego_bp, showCategory = 20)
+d <- dotplot(ego_bp, showCategory = 20)
+save_pub(plot =b, filename="barplot_GO_deg_ko_wt", width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_ko_wt", width=14, height=9)
+```
+
+```{r}
+d <- dotplot(ego_bp, showCategory = 10) +
+  theme(
+    axis.text.y  = element_text(size = 24, face = "bold"),  # bigger + bold
+    axis.text.x  = element_text(size = 22, face = "bold"),  # bigger + bold
+    legend.title = element_text(size = 22, face = "bold"),  # legend title
+    legend.text  = element_text(size = 22),axis.text.y.left = element_text(margin = margin(r = 15))                 # legend labels
+  )
+
+d
+save_pub(plot=d, filename ="kowtcapecora",width = 12, height=14)
+```
+
+
+
+fsgea
+
+```{r}
+ranks <- deg_ko_wt$logFC
+names(ranks) <- rownames(deg_ko_wt)
+ranks <- sort(ranks, decreasing = TRUE)
+
+#msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
+
+c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
+
+fgsea_ets <- fgsea(
+  pathways = c3_tft,
+  stats = ranks,
+  minSize = 10,
+  maxSize = 500
+)
+
+fgsea_ets$leadingEdge <- sapply(fgsea_ets$leadingEdge, paste, collapse = ",")
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_ko_wt.csv"),
+  row.names = FALSE
+)
+
+# ------------------------------------------------
+fgsea_ets <- fgsea_ets[
+  grep("^(ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG)", fgsea_ets$pathway),
+]
+
+
+# FDR filter + order (your minimal fixes)
+#fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.26, ]
+fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
+
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_only_deg_ko_wt.csv"),
+  row.names = FALSE
+)
+
+
+top_ets <- head(fgsea_ets, 20)
+top_ets
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment CapEC2 (KO vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_ko_wt", width=8, height=8)
+
+
+```
+```{r}
+top_ets <- head(fgsea_ets, 20)
+top_ets
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment CapEC2 (KO vs WT)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_ko_wt", width=8, height=8)
+
+```
+
+
+```{r}
+fgsea_kegg_full <- fgsea(
+  pathways = kegg_gs,
+  stats    = ranks,
+  minSize  = 10,
+  maxSize  = 500
+)
+fgsea_kegg_full <- fgsea_kegg_full[order(fgsea_kegg_full$padj), ]
+
+## 5. Count how many ETS TFs each KEGG pathway contains
+fgsea_kegg_full$n_ets <- sapply(
+  fgsea_kegg_full$pathway,
+  function(p) length(intersect(kegg_gs[[p]], ets_family_genes))
+)
+
+
+## 6. Keep KEGG pathways that:
+##    (a) are enriched (FDR < 0.25)
+##    (b) contain >= 1 ETS TF gene
+ets_kegg <- subset(fgsea_kegg_full, padj < 0.25 & n_ets > 0)
+ets_kegg <- ets_kegg[order(ets_kegg$padj), ]
+
+ets_kegg
+
+ets_kegg$leadingEdge <- sapply(ets_kegg$leadingEdge, paste, collapse = ",")
+write.csv(
+  ets_kegg,
+  file.path(celltype_dir, "ets_kegg_fsgea_deg_ko_wt.csv"),
+  row.names = FALSE
+)
+```
+
+
+```{r}
+
+old <- getwd()
+setwd(celltype_dir)
+kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
+
+for (pid in kegg_ids) {
+  message("Running Pathview for: ", pid, " (KO_vs_WT)")
+
+  pathview(
+    gene.data  = ranks_entrez,
+    pathway.id = pid,
+    species    = "mmu",
+    out.suffix = paste0("KO_vs_WT_capec2", pid)
+  )
+}
+
+setwd(old)
+```
+
+
+
+What it does: Creates dot plot of top 20 ETS-related pathways
+How to interpret:
+
+X-axis: NES (right = upregulated in OE, left = upregulated in WT)
+Dot size: Significance (bigger = more significant)
+Dot color: Same as NES (red = up in OE, blue = up in WT)
+
+
+
+OE VS KO
+
+
+```{r}
+
+write.csv(deg_oe_ko,
+          file.path(celltype_dir, "deg_oe_ko.csv"),
+          row.names = TRUE)
+
+# How many significant genes?
+sig_genes <- deg_oe_ko %>% filter(FDR < 0.05)
+nrow(sig_genes)
+# Output: xxx significant genes
+
+# How many up vs down?
+table(sig_genes$logFC > 0)
+# FALSE (down in OE): xxx
+# TRUE (up in OE): xxx
+```
+1] 283
+
+FALSE  TRUE 
+  114   169 
+
+```{r}
+#ibrary(dplyr)
+
+# Top 20 OE-upregulated genes
+top_up <- deg_oe_ko %>%
+  filter(FDR < 0.05, logFC > 1.2) %>%
+  arrange(desc(logFC)) %>% 
+  head(20)
+
+# Top 20 WT-upregulated genes (down in OE)
+top_down <- deg_oe_ko %>%
+  filter(FDR < 0.05, logFC < 1.2) %>%
+  arrange(logFC) %>% 
+  head(20)
+write.csv(top_up,
+          file.path(celltype_dir, "deg_oe_ko_top20_up.csv"),
+          row.names = TRUE)
+
+write.csv(top_down,
+          file.path(celltype_dir, "deg_oe_ko_top20_down.csv"),
+          row.names = TRUE)
+
+```
+
+
+```{r}
+# library(DT)
+# 
+# # Interactive searchable table
+# datatable(deg_oe_wt, 
+#           filter = 'top',
+#           options = list(pageLength = 50))
+```
+
+
+Viz
+
+```{r,fig.width=9,fig.height=7}
+p <- EnhancedVolcano(
+  deg_oe_ko,
+  lab = rownames(deg_oe_ko),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,     # log2 fold change cutoff of ±1
+  pointSize = 2.0,
+  labSize = 5,
+  #col = c('grey30', 'grey30', 'royalblue', 'red2'),
+  title = 'OE vs KO (CapEC1)',
+  subtitle = 'DEG Volcano Plot',
+  caption = 'Right = Upregulated | Left = Downregulated',
+  legendPosition = 'right'
+)
+p
+save_pub(plot=p,filename= "deg_oe_ko_EVplot", width = 9,height=7)
+```
+
+
+```{r, fig.width=9, fig.height=7}
+# Genes you care about
+goi <- c("Madcam1", "St6gal1",     "Nr2f2" ,"Nkx2-3", "Hey1",     "Ccl21","Sele", "Ephb4" ,"Selp", "Vcam1", "Glycam1", "Icam1")
+         #addressin                 #tf                                  #general pcv/hev genes
+
+p <- EnhancedVolcano(
+  deg_oe_ko,
+  lab = rownames(deg_oe_ko),
+  x = 'logFC',
+  y = 'FDR',
+  pCutoff = 0.05,
+  FCcutoff = 1.2,
+  selectLab = goi,              # Only label these genes
+  drawConnectors = TRUE,         # Draw lines to labels
+  widthConnectors = 0.5,
+  colConnectors = 'black',
+  title = 'OE vs KO - Adhesion Molecules'
+)
+
+save_pub(plot=p,filename= "deg_oe_ko_goi_EVplot", width = 9,height=7)
+```
+
+
+```{r,fig.height=9,fig.width=11}
+library(pheatmap)
+
+# Get top 50 DEGs
+top_degs <- deg_oe_ko %>%
+  filter(FDR < 0.05) %>%
+  arrange(FDR) %>%
+  head(50)
+
+# Extract normalized counts for these genes
+library(edgeR)
+norm_counts <- cpm(pcv_dge$y, log = TRUE)  # Log-CPM normalized
+top_genes_mat <- norm_counts[rownames(top_degs), ]
+
+# Create heatmap
+p <- pheatmap(
+  top_genes_mat,
+  scale = "row",              # Z-score scaling
+  cluster_rows = TRUE,
+  cluster_cols = TRUE,
+  show_rownames = TRUE,
+  show_colnames = TRUE,
+  annotation_col = data.frame(
+    Condition = pcv_dge$meta$condition,
+    row.names = colnames(top_genes_mat)
+  ),
+  main = "Top 50 DEGs for CAPEC1: OE vs KO"
+)
+
+p
+save_pub(plot=p, filename ="heatmap_deg_oe_ko",width = 11, height=9)
+```
+
+
+GO enrichment using ORA
+take significant deg, convert to entrez id and check if the sig genes are over represented in GO (biological processes)
+
+```{r}
+# Significant DE genes
+sig_deg <- deg_oe_ko %>% 
+  filter(FDR < 0.05) 
+
+# Up and down separately (optional)
+up_deg <- sig_deg %>% filter(logFC > 0)
+down_deg <- sig_deg %>% filter(logFC < 0)
+
+# 
+# library(AnnotationDbi)
+# 
+# library(org.Mm.eg.db)
+# library(clusterProfiler)
+
+gene_symbols <- rownames(sig_deg)
+
+entrez_ids <- bitr(
+  gene_symbols,
+  fromType = "SYMBOL",
+  toType = "ENTREZID",
+  OrgDb = org.Mm.eg.db
+)
+
+sig_deg_entrez <- sig_deg %>% 
+  mutate(SYMBOL = rownames(sig_deg)) %>%
+  inner_join(entrez_ids, by = "SYMBOL")
+
+
+ego_bp <- enrichGO(
+  gene          = sig_deg_entrez$ENTREZID,
+  OrgDb         = org.Mm.eg.db,
+  keyType       = "ENTREZID",
+  ont           = "BP",
+  pAdjustMethod = "fdr",
+  pvalueCutoff  = 0.05,
+  readable      = TRUE
+)
+
+
+write.csv(ego_bp,
+          file.path(celltype_dir, "ego_bp_deg_oe_ko.csv"),
+          row.names = FALSE)
+head(ego_bp)
+
+```
+
+```{r, fig.height=9, fig.width=14}
+#this is by padj
+b <- barplot(ego_bp, showCategory = 20)
+d <- dotplot(ego_bp, showCategory = 20)
+save_pub(plot =b, filename="barplot_GO_deg_oe_ko", width=14, height=9)
+save_pub(plot =d, filename="dotplot_GO_deg_oe_ko", width=14, height=9)
+```
+
+
+
+fsgea
+1.Ranks all genes by logfc more up in oe at top and most up in wt at the bottom
+2. MsigBS gene set c3 is TF target geens, C2 is kegg, reactome etc
+3.Filter for ets related pathways
+4.NES (Normalized Enrichment Score):
+
+Positive NES: Gene set enriched in upregulated genes (OE has more)
+Negative NES: Gene set enriched in downregulated genes (WT has more)
+Magnitude matters: |NES| > 2 is strong, > 1.5 is moderate
+
+
+```{r}
+ranks <- deg_oe_ko$logFC
+names(ranks) <- rownames(deg_oe_ko)
+ranks <- sort(ranks, decreasing = TRUE)
+
+msig_c3 <- msigdbr(species = "Mus musculus", collection = "C3")
+
+c3_tft <- split(msig_c3$gene_symbol, msig_c3$gs_name)
+
+fgsea_ets <- fgsea(
+  pathways = c3_tft,
+  stats = ranks,
+  minSize = 10,
+  maxSize = 500
+)
+
+fgsea_ets$leadingEdge <- sapply(fgsea_ets$leadingEdge, paste, collapse = ",")
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_all_before_grep_deg_oe_ko.csv"),
+  row.names = FALSE
+)
+
+# ------------------------------------------------
+fgsea_ets <- fgsea_ets[
+  grep("^(ETS|ERG|PEA3|ETV2|TCF|ERF|PDEF|ELF|ESE|TEL|SPI|ELG)", fgsea_ets$pathway),
+]
+
+write.csv(
+  fgsea_ets,
+  file.path(celltype_dir, "fgsea_ets_only_deg_oe_ko.csv"),
+  row.names = FALSE
+)
+
+# FDR filter + order (your minimal fixes)
+#fgsea_ets <- fgsea_ets[fgsea_ets$padj < 0.26, ]
+fgsea_ets <- fgsea_ets[order(fgsea_ets$padj), ]
+
+top_ets <- head(fgsea_ets, 20)
+top_ets
+p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
+  geom_point(aes(size = -log10(padj), color = NES)) +
+  scale_color_gradient2(low = "blue", high = "red", mid = "white") +
+  labs(
+    title = "ETS-related enrichment CapEC2 (OE vs KO)",
+    x = "Normalized Enrichment Score (NES)",
+    y = "ETS target sets",
+    size = "-log10(FDR)"
+  ) +
+  theme_bw()
+
+save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_ko", width=8, height=8)
+
+
+```
+TCF4_Q5 Enriched in OE.
+
+```{r}
+fgsea_kegg_full <- fgsea(
+  pathways = kegg_gs,
+  stats    = ranks,
+  minSize  = 10,
+  maxSize  = 500
+)
+fgsea_kegg_full <- fgsea_kegg_full[order(fgsea_kegg_full$padj), ]
+
+## 5. Count how many ETS TFs each KEGG pathway contains
+fgsea_kegg_full$n_ets <- sapply(
+  fgsea_kegg_full$pathway,
+  function(p) length(intersect(kegg_gs[[p]], ets_family_genes))
+)
+
+
+## 6. Keep KEGG pathways that:
+##    (a) are enriched (FDR < 0.25)
+##    (b) contain >= 1 ETS TF gene
+ets_kegg <- subset(fgsea_kegg_full, padj < 0.25 & n_ets > 0)
+ets_kegg <- ets_kegg[order(ets_kegg$padj), ]
+
+ets_kegg
+
+ets_kegg$leadingEdge <- sapply(ets_kegg$leadingEdge, paste, collapse = ",")
+write.csv(
+  ets_kegg,
+  file.path(celltype_dir, "ets_kegg_fsgea_deg_oe_ko.csv"),
+  row.names = FALSE)
+
+```
+```{r}
+# convert SYMBOL -> ENTrez
+mapped_ids <- mapIds(
+  org.Mm.eg.db,
+  keys = names(ranks),
+  column = "ENTREZID",
+  keytype = "SYMBOL",
+  multiVals = "first"
+)
+
+ranks_entrez <- ranks
+names(ranks_entrez) <- mapped_ids
+ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
+
+```
+
+not doing this
+```{r}
+kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
+
+for (pid in kegg_ids) {
+  message("Running Pathview for: ", pid, " (OE_vs_KO)")
+
+  pathview(
+    gene.data  = ranks_entrez,
+    pathway.id = pid,
+    species    = "mmu",
+    out.suffix = paste0("OE_vs_KO_hev", pid)
+  )
+}
+
+setwd(old)
+```
+
+```{r}
+
+old <- getwd()
+setwd(celltype_dir)
+
+pathview(
+  gene.data  = ranks_entrez,# will create this below
+  pathway.id = "mmu04014",     # your enriched KEGG pathway
+  species    = "mmu",
+  out.suffix =  "OE_vs_KO"
+)
+setwd(old)
+```
+
+What it does: Creates dot plot of top 20 ETS-related pathways
+How to interpret:
+
+X-axis: NES (right = upregulated in OE, left = upregulated in WT)
+Dot size: Significance (bigger = more significant)
+Dot color: Same as NES (red = up in OE, blue = up in WT)
+
+
