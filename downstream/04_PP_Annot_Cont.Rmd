@@ -633,13 +633,28 @@ FeaturePlot(seu,CapEC1_marker,label=T)
 table(seu$orig.ident)
 ```
 
+```{r}
+seu@meta.data$cluster_annot[seu@meta.data$cluster_annot == "Barrier EC"] <- "Stressed EC"
+```
 
-```{r,fig.width=6,fig.height=5}
+
+```{r,fig.width=10, fig.height=4}
+x <- VlnPlot(
+  object = seu,
+  features = "percent.mt",
+  group.by = "cluster_annot", pt.size = 0
+)
+save_pub(plot=x,width = 10, height=4, filename="mtpt_stress_EC" )
+```
+
+
+```{r,fig.width=7,fig.height=5}
 an <- DimPlot(seu,group.by="cluster_annot") + ggtitle("BECs of Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
 an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 3, bg.colour = "white", bg.r = .2, force = 0)
 an
 save_pub(plot=an, filename="becann",width=6,height=5)
+#save_pub(plot=an, filename="ppt_clust",width=7,height=5)
 ```
 
 ```{r}
@@ -684,7 +699,7 @@ seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "PCV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "HEV"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pre-Artery"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Vn Sele-"
-seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Barrier EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Stressed EC"
 seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "CRP"
 
 # Set as identity
@@ -699,6 +714,7 @@ table(seu@meta.data$cluster_annot)
 an2 <- DimPlot(seu, split.by= "condition",group.by="cluster_annot",ncol=2) + ggtitle("Annotated Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
 an2 <- LabelClusters(an2, id = "cluster_annot",  fontface = "bold", size = 4, bg.colour = "white", bg.r = .2, force = 0)
+an2
 save_pub(plot=an2, filename="spcon",width=10,height=9)
 ```
 
