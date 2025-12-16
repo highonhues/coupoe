@@ -651,10 +651,10 @@ save_pub(plot=x,width = 10, height=4, filename="mtpt_stress_EC" )
 ```{r,fig.width=7,fig.height=5}
 an <- DimPlot(seu,group.by="cluster_annot") + ggtitle("BECs of Peyers Patches") +
   theme(plot.title = element_text(hjust = 0.5))
-an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 4, bg.colour = "white", bg.r = .2, force = 0)
+an <- LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 3, bg.colour = "white", bg.r = .2, force = 0)
 an
-#save_pub(plot=an, filename="becann",width=6,height=5)
-save_pub(plot=an, filename="ppt_clust",width=7,height=5)
+save_pub(plot=an, filename="becann",width=6,height=5)
+#save_pub(plot=an, filename="ppt_clust",width=7,height=5)
 ```
 
 ```{r}
