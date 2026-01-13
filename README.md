@@ -9,7 +9,7 @@ Built off of the hypothesis that COUP-TFII and ETS contribute to PCV identity th
 COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + HTO). Goal is to isolate BEC subsets (HEC, PCV, CRP, arterial, capillary, TrEC), run  DGE, and quantify shifts in ETS/NKX/COUP-driven endothelial programs.
 
 ## My Contributions (Technical Notes)
-- Wrote full preprocessing to integration to annotation workflow (R/Seurat).
+- Wrote full preprocessing (QC, Cell Ranger, CITE-seq-Count) to integration to annotation workflow (R/Seurat).
 - Built pseudobulk engine with random-chunking for OE replicates.
 - Automated fgsea (C2 + C3) with motif filters + pathway-level exports.
 - Built consistent directory structure + helper IO functions.
@@ -18,7 +18,7 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 
 ## Pipelines (High-Level Notes)
 ### 1. Cell Ranger / Preprocessing
-- `cellranger multi` with hashing demux into WT / OE / KO. I designed a pipeline step in case you prefer to use `cellranger count` and `CITE-seq` on the v3 chemistry with custom params. The output results are comparable to HTO demux and MULTIseqDemux. You can use the comparitive analysis script on your own data.
+- `cellranger multi` with hashing demux into WT / OE / KO. I designed a pipeline step in case you prefer to use `cellranger count` and `CITE-seq-Count` on the v3 chemistry with custom params. The output results are comparable to HTO demux and MULTIseqDemux. You can use the comparitive analysis script on your own data.
 - Initial QC: nFeature/nCount/Ribo/MT filtering (tissue-specific thresholds).
 - Seurat object construction for multi assay (RNA + HTO assays). Seurat v5 object stores samples in layers.
 
