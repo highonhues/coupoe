@@ -3,7 +3,18 @@
 Actively building this out. This is mainly to track the analysis flow, what’s implemented. Will be adding documentation to follow like a code based tutorial if you want to recreate workflow steps for your own analysis. If you are from the Dinh Lab or from the Lee Lab and have any questions with your analysis, please don't hesitate to reach out! I am happy to help.
 
 ## Project Summary
-COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + HTO). Goal is to isolate BEC subsets (HEC, PCV, CRP, arterial, capillary, TrEC), run  DGE, and quantify shifts in ETS/NKX/COUP-driven endothelial programs. Primary markers: Madcam1, St6gal1, Glycam1, Ccl21, etc.
+TLDR of the research question: How does perturbing COUP-TFII affect venular identity across endothelial cells? Is there evidence that ETS-associated TF contribute to this regulation?
+
+Built off of the hypothesis that COUP-TFII and ETS contribute to PCV identity through binding of cis-regulatory elements in non-coding regions of PCV genes/addressins.
+COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + HTO). Goal is to isolate BEC subsets (HEC, PCV, CRP, arterial, capillary, TrEC), run  DGE, and quantify shifts in ETS/NKX/COUP-driven endothelial programs.
+
+## My Contributions (Technical Notes)
+- Wrote full preprocessing to integration to annotation workflow (R/Seurat).
+- Built pseudobulk engine with random-chunking for OE replicates.
+- Automated fgsea (C2 + C3) with motif filters + pathway-level exports.
+- Built consistent directory structure + helper IO functions.
+- All scripts SLURM-ready (HPC + local compatible). The nextflow pipeline will be cloud compatible!
+- Custom plotting wrappers (Cairo outputs, patchwork-safe) for high quality journal plot requirements.
 
 ## Pipelines (High-Level Notes)
 ### 1. Cell Ranger / Preprocessing
@@ -51,14 +62,6 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 - KEGG shows consistent regulation in ETS-linked vascular pathways.
 - HEC markers match expected directionality for KO (Madcam1↓, St6gal1↓).
 - Some PP vs MLN differences. Will not include MLN data in thesis.
-
-## My Contributions (Technical Notes)
-- Wrote full preprocessing to integration to annotation workflow (R/Seurat).
-- Built pseudobulk engine with random-chunking for OE replicates.
-- Automated fgsea (C2 + C3) with motif filters + pathway-level exports.
-- Built consistent directory structure + helper IO functions.
-- All scripts SLURM-ready (HPC + local compatible). The nextflow pipeline will be cloud compatible!
-- Custom plotting wrappers (Cairo outputs, patchwork-safe) for high quality journal plot requirements.
 
 ## Directory Structure (Draft)
 - Will merge the local with main and remove the former for complete structure. The exploratory and comparitive analysis scripts will be stored differently than the final workflow.
