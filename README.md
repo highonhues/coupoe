@@ -13,7 +13,7 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 - Built pseudobulk engine with random-chunking for OE replicates.
 - Automated fgsea (C2 + C3) with motif filters + pathway-level exports.
 - Built consistent directory structure + helper IO functions.
-- All scripts SLURM-ready (HPC + local compatible). The nextflow pipeline will be cloud compatible!
+- All scripts SLURM-ready (HPC + local compatible). The nextflow pipeline will be cloud compatible! On the HPC since we can't use docker we use using conda environments in our Nextflow pipeline. Dinh Lab students can check per tool performance on their Seqera Cloud account. I will help setup your Tower Agent once you have access to the HPC.
 - Custom plotting wrappers (Cairo outputs, patchwork-safe) for high quality journal plot requirements.
 
 ## Pipelines (High-Level Notes)
