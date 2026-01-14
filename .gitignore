@@ -22,6 +22,8 @@ downstream/.RData
 downstream/*.xml
 downstream/*.png
 downstream/*.html
+downstream/.RDataTmp
+downstream/.Rhistory
 
 # dirs
 
