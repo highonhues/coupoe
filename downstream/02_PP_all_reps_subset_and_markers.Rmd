@@ -69,6 +69,44 @@ saveRDS(
   object = seu,
   file = file.path(rds_dir, "seu_pp_all_reps.rds")
 )
+
+
+```{r}
+library(Cairo)
+save_pub <- function(plot,
+                     filename,
+                     width = 7,
+                     height = 7,
+                     dpi = 600) {
+
+  
+
+  # SAVE PDF
+  ggsave(
+    filename = file.path(fig_dir, paste0(filename, ".pdf")),
+    plot = plot,
+    device = CairoPDF,
+    width = width,
+    height = height,
+    units = "in"
+  )
+
+  # SAVE PNG 
+  CairoPNG(
+    filename = file.path(fig_dir, paste0(filename, ".png")),
+    width  = width * dpi,   # convert inches → pixels
+    height = height * dpi,
+    res    = dpi
+  )
+
+  print(plot) 
+  dev.off()
+
+  return(plot)
+}
+
+```
+
 ```{r}
 # Load it back
 #seu <- readRDS("seu_int.rds")
@@ -77,14 +115,16 @@ seu <- readRDS(file = file.path(rds_dir,"seu_pp_int_cc_calc.rds"))
 
 you might have to do cc diff if you want it cause id idnt sve that
 
+
+
 ```{r}
-ggplot(seu@meta.data) +
+p <- ggplot(seu@meta.data) +
     geom_bar(aes(x=orig.ident, fill=condition),
              stat="count", color="black") +
     theme_classic() +
     theme(axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
     labs(x="Sample name", y="Number of cells")
-
+save_pub(plot=p, filename="cellno")
 ```
 
 ```{r}
