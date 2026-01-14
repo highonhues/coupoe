@@ -15,7 +15,19 @@ results/
 # Downstream changes
 
 downstream/*.rds
-downstream/.csv
+downstream/*.csv
 downstream/*.R
 downstream/*.Rproj
-downstream/.Rproj.user
+downstream/.RData
+downstream/*.xml
+downstream/*.png
+downstream/*.html
+
+# dirs
+
+downstream/.Rproj.user/
+downstream/02_PP_all_reps_subset_and_markers_files/
+downstream/03_cell_annotation_files/
+downstream/MLN_outputs/
+downstream/PeyersP_8OUTS/
+downstream/PP_outputs/
