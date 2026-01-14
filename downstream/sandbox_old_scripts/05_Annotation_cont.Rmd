@@ -1,0 +1,156 @@
+---
+title: "05_Cell_Annotation_Cont"
+author: "Ananya Gupta"
+date: "2025-11-12"
+output: html_document
+---
+```{r}
+install.packages('metap')
+```
+```{r}
+BiocManager::install('multtest')
+```
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(tidyverse)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+library(gprofiler2)
+library(multtest)
+library(metap)
+# Set the random number seed
+set.seed(1234)
+```
+
+Cell Annotation
+
+```{r}
+# Load it back
+seu <- readRDS("seu_bec_clean_post_umap.rds")
+```
+
+
+
+```{r,fig.width=10,fig.height=4}
+DimPlot(seu, reduction = 'umap.bec', group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu, reduction = 'umap.bec', group.by = 'genotype') #+ ggtitle("Blood Endothelial Cells Clustered, Batch Effect Removed")
+
+#condition|clusters
+```
+Before we start our marker identification we will explicitly set our default assay, we want to use the normalized data, but not the integrated data.
+```{r}
+DefaultAssay(seu) <- "RNA"
+Idents(seu) <- "mnn.clusters.bec"
+```
+
+Afetr changing to RNA
+
+```{r}
+DimPlot(seu, reduction = 'umap.bec', split.by="genotype", label = TRUE, ncol=2)
+```
+
+
+```{r,fig.width=10,fig.height=4}
+DimPlot(seu, group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu,  group.by = 'genotype') #+ ggtitle("Blood Endothelial Cells Clustered, Batch Effect Removed")
+
+#condition|clusters
+```
+
+```{r}
+art_mark <- c("Sox17", "Bmx","Gja5") #did not find Gkn3
+pre_art <- c("Sox17", "Gja4", "Depp1")
+PCV <- c("Selp")
+```
+
+
+```{r}
+Seurat::FeaturePlot(seu, art_mark, ncol=2)#,min.cutoff = 'q10')
+```
+```{r}
+
+levels(Idents(seu))
+clusters <- levels(Idents(seu))
+```
+
+```{r}
+# conserved_list <- lapply(clusters, function(cl){
+#   FindConservedMarkers(
+#     seu,
+#     ident.1 = cl,
+#     only.pos = TRUE,
+#     grouping.var = "genotype",
+#     assay = "RNA",
+#     slot = "data"
+#   )
+# })
+# names(conserved_list) <- clusters
+
+#we can calculated the genes that are conserved markers irrespective of stimulation condition in cluster 6
+#a standard DE test inside each genotype separately: “cluster 3 vs all other clusters (within WT)”, then “cluster 3 vs others (within WT2)
+#it then combines those per-genotype p-values into one meta p-value that asks:is this gene a marker for cluster 3 consistently across all genotypes
+#“is this gene a marker for cluster 3 consistently across all genotypes?”
+
+get_conserved <- function(cluster_id){
+
+  FindConservedMarkers(
+    seu,
+    ident.1 = cluster_id,
+    grouping.var = "genotype",   # <-- this is YOUR replicate metadata column
+    only.pos = TRUE,
+    assay = "RNA",
+    slot = "data"
+  ) %>%
+    rownames_to_column(var = "gene") %>%  # save gene names (avoids the rownames issue)
+    mutate(cluster = cluster_id)          # label which cluster markers belong to
+}
+
+# ---- 3) map over ALL clusters and return a single data frame ----
+conserved_markers_df <- map_dfr(levels(Idents(seu)), get_conserved)
+
+# inspect the first lines
+head(conserved_markers_df)
+```
+
+WT_p_val – p-value (not adjusted) for the DE test within WT (cluster vs rest). Smaller = stronger evidence.
+
+WT_avg_log2FC (or WT_avg_logFC depending on version) – average log fold-change within WT.
+
+Positive → higher in the chosen cluster than the rest (a marker).
+
+Negative → lower in the chosen cluster.
+
+WT_pct.1 – % of cells in the chosen cluster (within WT) where the gene is detected (>0).
+
+WT_pct.2 – % of cells in other clusters (within WT) where the gene is detected.
+
+WT_p_val_adj – WT_p_val after multiple-testing correction (Bonferroni in Seurat).
+
+
+```{r}
+
+#we suggest looking for markers with large differences in expression between pct.1 and pct.2 and larger fold changes
+top5_per_cluster <- conserved_markers_df %>%
+  group_by(cluster) %>%
+  arrange(p_val_meta) %>%
+  slice(1:10)
+
+```
+After you annotate cell types, you sum counts per sample × cell type (e.g., all WT1 HEV cells summed together).

@@ -1,0 +1,318 @@
+---
+title: "03_cell_annotation"
+author: "Ananya Gupta"
+date: "2025-11-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+# Set the random number seed
+set.seed(1234)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+# Load it back
+seu <- readRDS("seu_int_layersjoined.rds")
+```
+
+No need to run this as im satisfied with my 0.8 resolution. We have already done
+
+
+seu <- FindClusters(seu, resolution = 0.8, cluster.name = "mnn_clusters") 
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+
+# visualize data
+clusters <- DimPlot(ifnb_harmony, reduction = 'umap', group.by = 'seurat_clusters', label = TRUE)
+condition <- DimPlot(ifnb_harmony, reduction = 'umap', group.by = 'stim')
+
+condition|clusters
+
+
+```{r, fg.width=4,fig.height=8}
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.ident", label=F)
+DimPlot(seu, reduction = "umap.mnn", group.by = "mnn_clusters", label=T)
+```
+
+And now we need to first put in the cells we need to manually remove
+
+```{r}
+lec <- c("Prox1","Lyve1","Pdpn")
+fib_ret <- c("Pdpn","Ccl19","Pdgfra")
+pericytes <- c("Itga7","Pdgfrb")
+lymphocytes <- c("Ptprc","Cd52")
+```
+
+```{r}
+DotPlot(seu,features=c(fib_ret))+ggtitle("fib_ret")
+```
+
+
+```{r}
+DotPlot(seu,features=c(lymphocytes,pericytes,lec))+ggtitle("Lymphocytes,pericytes,lec")
+```
+
+
+```{r}
+
+plots <- lapply(pericytes, function(gene) {
+  p <- VlnPlot(seu, features = gene, pt.size=0.001)
+  p$layers[[1]]$aes_params$colour <- NA
+  p + ggtitle(gene) + theme_classic() + NoLegend() +
+  theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+      axis.text.x = element_text(size = 12, angle = 45, hjust = 1),       # X-axis text
+      axis.text.y = element_text(size = 12),                              # Y-axis text
+      axis.title.x = element_text(size = 13, face = "bold"),              # X-axis label
+      axis.title.y = element_text(size = 13, face = "bold"),              # Y-axis label
+      panel.border = element_blank(),
+      #axis.line = element_line(color = "black")
+    )
+
+  
+})
+
+# Stack vertically with /
+#Reduce(`/`, plots)
+wrap_plots(plots, ncol = 1)  # ncol = 1 makes them stack vertically
+```
+14,15
+```{r,fig.width=8, fig.height=8}
+plots <- lapply(lec, function(gene) {
+  p <- VlnPlot(seu, features = gene, pt.size=0.001)
+  p$layers[[1]]$aes_params$colour <- NA
+  p + ggtitle(gene) + theme_classic() + NoLegend() +
+  theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+      axis.text.x = element_text(size = 12, angle = 45, hjust = 1),       # X-axis text
+      axis.text.y = element_text(size = 12),                              # Y-axis text
+      axis.title.x = element_text(size = 13, face = "bold"),              # X-axis label
+      axis.title.y = element_text(size = 13, face = "bold"),              # Y-axis label
+      panel.border = element_blank(),
+      #axis.line = element_line(color = "black")
+    )
+
+  
+})
+
+# Stack vertically with /
+#Reduce(`/`, plots)
+wrap_plots(plots, ncol = 1)  # ncol = 1 makes them stack vertically
+```
+
+```{r,fig.height=8,fig.width=}
+# plots <- lapply(fib_ret, function(gene) {
+#   p <- VlnPlot(seu, features = gene, pt.size=0.001)
+#   p$layers[[1]]$aes_params$colour <- NA
+#   p + ggtitle(gene) + theme_classic() + NoLegend() +
+#   
+# })
+
+plots <- lapply(fib_ret, function(gene) {
+  p <- VlnPlot(seu, features = gene, pt.size=0.001)
+  p$layers[[1]]$aes_params$colour <- NA
+  p + ggtitle(gene) + theme_classic() + NoLegend() +
+  theme(
+      plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+      axis.text.x = element_text(size = 12, angle = 45, hjust = 1),       # X-axis text
+      axis.text.y = element_text(size = 12),                              # Y-axis text
+      axis.title.x = element_text(size = 13, face = "bold"),              # X-axis label
+      axis.title.y = element_text(size = 13, face = "bold"),              # Y-axis label
+      panel.border = element_blank(),
+      #axis.line = element_line(color = "black")
+    )
+
+  
+})
+
+
+
+# Stack vertically with /
+#Reduce(`/`, plots)
+wrap_plots(plots, ncol = 1)  # ncol = 1 makes them stack vertically
+```
+The / operator in patchwork stacks plots vertically, while | would place them side by side.
+```{r}
+
+
+p <- VlnPlot(seu, features = "Ccl19")
+p$layers[[1]]$aes_params$colour <- NA  # Remove color from first layer (violin)
+p + ggtitle("Fibroblastic Reticular cells") + theme_classic() +NoLegend()
+```
+
+I'm confused I think maybe i need a smaller resolution
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.4, cluster.name = "mnn_clusters") 
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+```
+```{r}
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.ident", label=F)
+DimPlot(seu, reduction = "umap.mnn", group.by = "mnn_clusters", label=T)
+```
+
+
+
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_res0.4.rds")
+
+# Load it back
+#seu <- readRDS("seu_res0.4.rds")
+```
+
+
+```{r}
+
+lec <- c("Prox1","Lyve1","Pdpn")
+fib_ret <- c("Ccl19","Pdgfra") #"Pdpn",
+pericytes <- c("Itga7","Pdgfrb")
+lymphocytes <- c("Ptprc","Cd52")
+DotPlot(seu,features=c(lec,fib_ret,pericytes,lymphocytes))+ggtitle("lec,fib_ret,pericytes,lymphocytes")
+```
+
+```{r}
+
+# these were with 0.4
+seu <- AddModuleScore(seu, features = list(lec), name = "LEC")
+seu <- AddModuleScore(seu, features = list(fib_ret), name = "FRC")
+seu <- AddModuleScore(seu, features = list(pericytes), name = "Pericyte")
+seu <- AddModuleScore(seu, features = list(lymphocytes), name = "Lymphocyte")
+
+# Rename columns
+seu$LEC_score <- seu$LEC1
+seu$FRC_score <- seu$FRC1
+seu$Pericyte_score <- seu$Pericyte1
+seu$Lymphocyte_score <- seu$Lymphocyte1
+
+# Visualize scores
+FeaturePlot(seu, features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"),
+            reduction = "umap.mnn", ncol = 2,min.cutoff = 'q10')
+
+# Visualize scores
+VlnPlot(seu, pt.size=0.002,features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"))
+            #reduction = "umap.mnn", ncol = 2,min.cutoff = 'q10')
+```
+
+```{r}
+
+# Visualize scores
+VlnPlot(seu, pt.size=0,features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"))
+```
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters") 
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+```
+
+
+```{r}
+
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.ident", label=F)
+DimPlot(seu, reduction = "umap.mnn", group.by = "mnn_clusters", label=T)
+
+lec <- c("Prox1","Lyve1","Pdpn")
+fib_ret <- c("Ccl19","Pdgfra") #"Pdpn",
+pericytes <- c("Itga7","Pdgfrb")
+lymphocytes <- c("Ptprc","Cd52")
+DotPlot(seu,features=c(lec,fib_ret,pericytes,lymphocytes))+ggtitle("lec,fib_ret,pericytes,lymphocytes")
+```
+
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_res0.3.rds")
+
+# Load it back
+#seu <- readRDS("seu_res0.3.rds")
+```
+
+
+
+
+
+```{r}
+
+# these were with 0.3
+seu <- AddModuleScore(seu, features = list(lec), name = "LEC")
+seu <- AddModuleScore(seu, features = list(fib_ret), name = "FRC")
+seu <- AddModuleScore(seu, features = list(pericytes), name = "Pericyte")
+seu <- AddModuleScore(seu, features = list(lymphocytes), name = "Lymphocyte")
+
+# Rename columns
+seu$LEC_score <- seu$LEC1
+seu$FRC_score <- seu$FRC1
+seu$Pericyte_score <- seu$Pericyte1
+seu$Lymphocyte_score <- seu$Lymphocyte1
+
+# Visualize scores
+FeaturePlot(seu, features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"),
+            reduction = "umap.mnn", ncol = 2,min.cutoff = 'q10')
+
+# Visualize scores
+VlnPlot(seu, pt.size=0,features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"))
+            #reduction = "umap.mnn", ncol = 2,min.cutoff = 'q10')
+```
+```{r}
+
+# Visualize scores
+VlnPlot(seu, pt.size=0,features = c("LEC_score", "FRC_score", "Pericyte_score", "Lymphocyte_score"))
+```
+
+```{r}
+par(mfrow = c(2, 2))
+hist(seu$LEC_score, breaks = 50, main = "Lymphatic EC Score")
+abline(v = 0.2, col = "red", lwd = 2)
+hist(seu$FRC_score, breaks = 50, main = "FRC Score")
+abline(v = 0.2, col = "red", lwd = 2)
+hist(seu$Pericyte_score, breaks = 50, main = "Pericyte Score")
+abline(v = 0.2, col = "red", lwd = 2)
+hist(seu$Lymphocyte_score, breaks = 50, main = "Lymphocyte Score")
+abline(v = 0.2, col = "red", lwd = 2)
+
+```
+
+```{r}
+table(seu$orig.ident)
+
+```
+
+```{r}
+seu <- subset(seu, 
+                    subset = LEC_score < 0.3 & 
+                             FRC_score < 0.2 & 
+                             Pericyte_score < 0.1 & 
+                             Lymphocyte_score < 0.1)
+table(seu$orig.ident)
+```
+
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_res0.3_nonBEC_removed.rds")
+```
+
