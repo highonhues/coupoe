@@ -1,0 +1,864 @@
+---
+title: "PP_integrated"
+author: "Ananya Gupta"
+date: "2025-10-29"
+output: html_document
+---
+
+```{r}
+remotes::install_github("bnprks/BPCells/r")
+```
+
+
+```{r}
+install.packages("clustree")   # only once
+
+
+```
+
+
+```{r}
+devtools::install_github("kbrulois/magicBatch")
+```
+
+```{r}
+remotes::install_github('satijalab/seurat-wrappers')
+```
+```{r}
+BiocManager::install("satijalab/azimuth")
+
+```
+
+```{r}
+remotes::install_github("satijalab/seurat", "seurat5")#, quiet = TRUE)
+```
+
+
+
+```{r env_loading, results='FALSE'}
+# Load packages, data and functions
+library(Seurat)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+# Set the random number seed
+set.seed(1234)
+```
+
+
+```{r}
+samples_df <- read.csv("samples_pp_only.csv",header=TRUE, stringsAsFactors = FALSE) #gsub works on chr
+
+samples_df$SampleName <- gsub("_", "-", samples_df$SampleName)
+
+#fix path for windows
+samples_df$Path <- trimws(samples_df$Path) #white space
+samples_df$Path <-  normalizePath(samples_df$Path, winslash="/")#,mustWork = FALSE)
+
+
+#setnames(values,namestoset)
+datadirs <- setNames(samples_df[,4], samples_df[,1])
+
+
+print(samples_df)
+print(datadirs)
+
+```
+
+```{r}
+seurat_list <- list()
+
+for(i in 1:nrow(samples_df)) {
+  sample_name <- samples_df$SampleName[i]
+  sample_group <- samples_df$SampleGroup[i]
+  data_path <- samples_df$Path[i]
+  
+  cat("Processing:", sample_name, "\n")
+  
+  data <- Read10X(data.dir = data_path)
+  
+  #HTO data is multi output so it will be a list
+  if(is.list(data)) {
+    # For Cell Ranger multi output, extract only Gene Expression
+    gene_exp <- data$`Gene Expression`
+    cat("  - Multi output detected, using Gene Expression only\n")
+  } else {
+    # Regular output
+    gene_exp <- data
+    cat("  - Regular output\n")
+  }
+  
+  # Create Seurat object
+  seurat_obj <- CreateSeuratObject(
+    counts = gene_exp,
+    project = sample_name,
+    min.cells = 3,
+    min.features = 100
+  )
+  
+  #metadata
+  #seurat_obj$SampleName <- sample_name
+  seurat_obj$genotype <- sample_group
+  seurat_obj$site <- samples_df$Tissue[i]
+  
+  #qc
+  seurat_obj$percent.mt <- PercentageFeatureSet(seurat_obj, pattern = "^mt-")
+
+  
+  # Store in list
+  seurat_list[[sample_name]] <- seurat_obj
+}
+
+
+
+```
+
+```{r}
+seurat_list[[5]]@meta.data
+```
+
+
+
+
+
+```{r}
+# Merge all objects into one Seurat object
+seu <- merge(
+  x = seurat_list[[1]],
+  y = seurat_list[2:length(seurat_list)],
+  add.cell.ids = names(seurat_list),
+  project = "PP_Analysis",merge.data = TRUE
+)
+```
+
+
+Does it look like seurat v5 obj?
+
+```{r}
+print(Layers(seu))
+```
+
+
+```{r}
+seu
+```
+
+
+
+```{r}
+#Features above 6000 might be doublets ngl
+FeatureScatter(seu, feature1 = "nCount_RNA", feature2 = "nFeature_RNA", group.by="genotype") 
+  #ggtitle("QC: UMIs vs Genes")
+```
+
+
+
+```{r,fig.width=12}
+df <- seu@meta.data
+df$sum <- seu$nCount_RNA
+df$detected <- seu$nFeature_RNA
+
+
+ggplot(df, aes(x = sum, y = detected)) +
+  geom_point(aes(colour = percent.mt > 10), alpha = 0.7, size = 1) +
+  facet_wrap(vars(genotype)) +
+  scale_color_manual(
+    values = c("FALSE" = "coral", "TRUE" = "turquoise3"),
+    labels = c("FALSE" = "≤10%", "TRUE" = ">10%")
+  ) +
+  labs(
+    title = "QC: Detected genes vs total counts per Peyer's Patches Sample",
+    x = "Total counts per cell",
+    y = "Detected genes per cell",
+    colour = "Mitochondrial %"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    strip.text = element_text(face = "bold")
+  )
+
+```
+
+
+```{r,fig.width=10, fig.height=4}
+VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), group.by = "genotype",
+              pt.size = 0,
+              ncol = 3)
+
+```
+
+
+```{r}
+seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10)
+```
+
+
+
+```{r}
+rm(p1)
+rm(p2)
+rm(seurat_obj)
+rm(data)
+```
+
+First proceeding without integration
+
+```{r}
+# run standard anlaysis workflow
+seu <- NormalizeData(seu)
+```
+
+https://github.com/satijalab/azimuth/issues/257
+
+https://github.com/satijalab/seurat/issues/9792
+
+
+```{r}
+#obj <- RunAzimuth(obj, reference = "ref")
+seu <- FindVariableFeatures(seu, nfeatures=3000)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu)
+
+```
+```{r}
+# Save your Seurat object
+saveRDS(seu, file = "seu_unin_till_PCA.rds")
+
+# Load it back
+#seu <- readRDS("seu_after_QC.rds")
+```
+
+You can see that all the genes dont get labelled and also the PCA uses these Find Varible genes when you dont integrate. The Find VariableFeatures(seu) are NOT the top genes by variance but the HVGs based on common consensus between layers. This is the problem!
+```{r}
+# Identify the 10 most highly variable genes
+top10_preint <- head(Seurat::VariableFeatures(seu), 10)
+top10_preint
+
+vf_plot_pre_int <- Seurat::VariableFeaturePlot(seu)
+Seurat::LabelPoints(plot = vf_plot_pre_int,
+            points = top10_preint, repel = TRUE, xnudge=0,ynudge=0)
+```
+
+```{r}
+HVFInfo(seu) %>% arrange(desc(variance.standardized)) %>% head(10)
+head(VariableFeatures(seu), 20)
+```
+
+
+
+```{r}
+
+# Plot the actual genes marked by their standardized variance
+
+top3000_genes <- HVFInfo(seu) %>% arrange(desc(variance.standardized)) %>% head(3000) %>% rownames()
+top10_hvfplot_preint <- head(top3000_genes,10)
+
+vf_plot_hvf_preint <- VariableFeaturePlot(seu)
+Seurat::LabelPoints(plot = vf_plot_hvf_preint,
+            points = top10_hvfplot_preint, repel = TRUE, xnudge=0,ynudge=0)
+
+```
+
+```{r,fig.height=5}
+ElbowPlot(seu,ndims=50)
+```
+
+
+
+
+
+```{r}
+seu <- FindNeighbors(seu, dims = 1:35, reduction = "pca")
+seu <- FindClusters(seu, resolution = 2, cluster.name = "unintegrated_clusters") #also creates seurat_clusters and adds it as identity but this gets overwritten everythime you run FindClusters
+```
+```{r}
+seu@meta.data
+```
+
+
+
+```{r}
+seu <- RunUMAP(seu, dims = 1:35, reduction = "pca", reduction.name = "umap.unintegrated")
+# visualize by batch and cell type annotation
+# cell type annotations were previously added by Azimuth
+DimPlot(seu, reduction = "umap.unintegrated", group.by = c("ident"))
+
+```
+
+```{r}
+DimPlot(seu, reduction = "umap.unintegrated", group.by = c("genotype"))
+```
+
+
+```{r}
+DimPlot(seu, reduction = "umap.unintegrated", group.by = c("orig.ident")) + ggtitle("Consensus HVG - Unintegrated")
+```
+
+```{r}
+variable_features_PCA <- row.names(seu@reductions$pca@feature.loadings) 
+print(length(VariableFeatures(seu)[VariableFeatures(seu) %in% variable_features_PCA]))
+```
+
+```{r}
+# Difference between HVF and those used by the PCA
+print(length(top3000_genes[top3000_genes %in% variable_features_PCA]))
+#top3000_genes
+```
+
+I'm skeptical about including the one from the PCA so we will rty with both.
+First I will save and then we will just try the seurat way.
+
+```{r}
+# Save your Seurat object
+saveRDS(seu, file = "seu_just_before_int.rds")
+
+# Load it back
+#seu <- readRDS("seu_just_before_int.rds")
+```
+
+
+Integration
+
+```{r}
+seu <- readRDS("seu_just_before_int.rds")
+```
+
+
+```{r}
+Layers(seu, search="data")
+```
+
+
+
+
+```{r}
+table(seu$orig.ident)
+```
+
+
+
+```{r}
+# Check number of genes per sample
+table(seu$orig.ident)
+
+# Check genes in each layer
+sapply(Layers(seu, search = "counts"), function(layer) {
+  dim(LayerData(seu, layer = layer))
+})
+```
+
+```{r}
+# # Step 1: Join all layers (this standardizes to common genes)
+# seu <- JoinLayers(seu)
+# 
+# # Check - should now have same genes
+# print(dim(seu))  # Should show one consistent gene count
+# 
+# # Step 2: Split again by sample
+# seu[["RNA"]] <- split(seu[["RNA"]], f = seu$orig.ident)
+# 
+# # Step 3: Verify all layers now have same genes
+# sapply(Layers(seu, search = "counts"), function(layer) {
+#   dim(LayerData(seu, layer = layer))
+# })
+```
+```{r}
+dim(seu@reductions$pca@cell.embeddings)
+
+# Check how many cells per batch
+table(seu$orig.ident)
+
+# Check if PCA has embeddings for all cells
+ncol(seu)  # Total cells
+nrow(seu@reductions$pca@cell.embeddings)  # Cells in PCA
+
+```
+
+```{r}
+?FastMNNIntegration
+```
+
+
+```{r}
+?IntegrateLayers
+```
+
+https://github.com/satijalab/seurat/issues/8938
+
+
+
+```{r}
+seu <- IntegrateLayers(seu, method = FastMNNIntegration, batch=seu$orig.ident,orig.reduction  = "pca", new.reduction = "integrated.mnn",verbose = TRUE)
+#
+```
+
+```{r}
+str(seu)
+
+```
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:35)
+
+```
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_int_justdid_findneigh.rds")
+
+# Load it back
+#seu <- readRDS("seu_int_justdid_findneigh.rds")
+```
+
+
+
+```{r}
+
+seu <- FindClusters(seu, resolution = 0.8, cluster.name = "mnn_clusters")
+```
+
+
+```{r}
+colnames(seu@meta.data)
+
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:35, reduction.name = "umap.mnn")
+```
+
+
+
+```{r}
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.ident")
+#ggsave("02_integrated_by_sample.png", width = 8, height = 6)
+
+```
+
+```{r}
+seu <- JoinLayers(seu)
+
+```
+
+```{r}
+
+# Save your Seurat object
+saveRDS(seu, file = "seu_int_layersjoined.rds")
+
+# Load it back
+#seu <- readRDS("seu_int_layersjoined.rds")
+```
+
+```{r}
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.ident")
+```
+
+
+```{r}
+DimPlot(seu, reduction = "umap.mnn", group.by = "orig.idents")
+```
+
+
+```{r}
+
+```
+
+```{r}
+seutry <- Seurat::FindClusters(seu, resolution = seq(0.1, 2, by=0.1))
+```
+```{r}
+colnames(seutry@meta.data
+         )
+```
+
+```{r}
+library(clustree)
+```
+
+```{r,fig.height=10}
+clustree::clustree(seutry@meta.data[,grep("RNA_snn_res.", colnames(seutry@meta.data))],
+                   prefix = "RNA_snn_res.", layout="sugiyama")
+```
+
+```{r}
+rm(seutry)
+```
+
+```{r}
+DefaultAssay(seu)
+```
+
+```{r}
+lymphatic_ec <- c("Prox1","Lyve1", "Pdpn")
+pericytes <- c("Itga7", "Pdgfrb")
+fibro_ret <- c("Pdpn", "Ccl19", "Pdgfra")
+Lymphocytes <- c("Ptprc","Cd52")
+
+```
+
+
+```{r}
+Seurat::FeaturePlot(seu, fibro_ret, ncol=2) #+ ggtitle("Fibroblastic Reticular Cells")
+```
+```{r}
+Seurat::FeaturePlot(seu, lymphatic_ec, ncol=2)
+```
+
+```{r,fig.height=5, fig.width=10}
+Seurat::FeaturePlot(seu, Lymphocytes)
+```
+
+
+```{r,fig.height=5, fig.width=10}
+Seurat::FeaturePlot(seu, pericytes)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+Seurat::FeaturePlot(seu, "Glycam1")
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# Remove the sparse matrix to free up memory
+rm(sparse_matrix)
+
+# Force garbage collection to immediately free the memory
+gc()
+```
+
+
+```{r}
+
+
+```
+
+
+```{r}
+seu
+```
+```{r}
+#number of cells in each sample
+table(seu@active.ident)
+```
+```{r}
+seu@meta.data
+```
+
+
+Highly expressed genes tend to be detected in a higher proportion of cells than lowly expressed genes.
+
+```{r}
+#x=umis,y=genes
+#the number on top is the pearson corr
+FeatureScatter(seu, feature1="nCount_RNA",feature2="nFeature_RNA")
+```
+
+
+```{r}
+seu <- PercentageFeatureSet(seu, pattern = "^mt-", col.name = "percent.mt")
+#seu <- subset(seu, subset = nFeature_RNA > 100 & percent.mt < 10)
+```
+
+
+```{r}
+Seurat::VlnPlot(seu, features = c("percent.mt"))
+```
+
+
+```{r}
+#split divides the vector in x aka RNA in groups defined by f
+
+#maaybe i dont even need this
+#seu[["RNA"]] <- split(seu[["RNA"]], f = seu$orig.ident)
+```
+
+```{r}
+#map project folder name
+
+seu$SampleName<- samples_df$SampleName[ match(seu$orig.ident, samples_df$SampleGroup) ]
+seu$Tissue <- samples_df$Tissue[ match(seu$orig.ident, samples_df$SampleGroup) ]
+
+```
+
+To use it downstream :
+
+DimPlot(seu, group.by = "SampleName")    or orig.ident
+subset(seu, subset = SampleName == "OE1")
+
+
+
+```{r}
+Layers(seu)
+```
+
+```{r}
+rm(sparse_matrix)
+gc()
+```
+
+
+
+```{r}
+seu <- NormalizeData(seu)
+```
+
+
+```{r}
+DefaultAssay(seu)
+Assays(seu)
+
+```
+
+
+
+
+```{r}
+seu <- RunAzimuth(seu, reference = "mousecortexref")
+```
+```{r}
+
+seu <- FindVariableFeatures(seu,nfeatures = 3000)
+
+```
+```{r}
+top10 <- head(Seurat::VariableFeatures(seu), 10)
+top10
+```
+```{r}
+vf_plot <- Seurat::VariableFeaturePlot(seu)
+Seurat::LabelPoints(plot = vf_plot,
+            points = top10, repel = TRUE)
+
+```
+
+```{r}
+library(gprofiler2)
+mmus_s = gorth(cc.genes.updated.2019$s.genes, 
+               source_organism = "hsapiens", 
+               target_organism = "mmusculus")$ortholog_name
+
+mmus_g2m = gorth(cc.genes.updated.2019$g2m.genes, 
+                 source_organism = "hsapiens", 
+                 target_organism = "mmusculus")$ortholog_name
+```
+
+```{r}
+#seu <- CellCycleScoring(seu, s.features = mmus_s, g2m.features = mmus_g2m, set.ident = TRUE)
+#seu$CC.Difference <- seu$S.Score - seu$G2M.Score
+seu <- ScaleData(seu)
+```
+
+```{r}
+
+seu <- RunPCA(seu)
+```
+
+
+```{r}
+seu <- FindNeighbors(seu, dims = 1:30, reduction = "pca")
+seu <- FindClusters(seu, resolution = 2, cluster.name = "unintegrated_clusters")
+```
+
+
+```{r}
+seu <- RunUMAP(seu, dims = 1:30, reduction = "pca", reduction.name = "umap.unintegrated")
+# visualize by batch and cell type annotation
+# cell type annotations were previously added by Azimuth
+DimPlot(seu, reduction = "umap.unintegrated", group.by = c("orig.ident"))
+```
+
+
+
+```{r}
+seu <- IntegrateLayers(
+  object = seu, method = FastMNNIntegration,
+  new.reduction = "integrated.mnn",
+  verbose = FALSE
+)
+```
+
+
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated.mnn", dims = 1:30)
+seu <- FindClusters(seu, resolution = 1, cluster.name = "mnn_clusters")
+```
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated.mnn", dims = 1:30, return.model = T, verbose = F)
+DimPlot(seu, reduction = "integrated.mnn", group.by = c("orig.ident"))
+```
+
+```{r}
+seu <- JoinLayers(seu)
+seu
+```
+```{r}
+DefaultAssay(seu) <- "RNA"
+```
+
+
+```{r,fig.height=10,fig.width=10}
+all_markers <- FindAllMarkers(
+  seu, 
+  only.pos = TRUE,           # Only positive markers
+  min.pct = 0.25,            # Expressed in at least 25% of cells
+  logfc.threshold = 0.25     # At least 0.25 log fold-change
+)
+
+# View top markers per cluster
+library(dplyr)
+top_markers <- all_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+# 4. Visualize top markers
+# Dot plot
+DotPlot(seu, features = unique(top_markers$gene)) + RotatedAxis()
+
+# Heatmap of top markers
+top5 <- all_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 5, wt = avg_log2FC)
+
+DoHeatmap(seu, features = top5$gene)
+
+```
+
+
+
+```{r,fig.width=40,fig.height=25}
+
+# Dot plot
+DotPlot(seu, features = unique(top_markers$gene)) + RotatedAxis()
+```
+
+
+
+
+
+```{r,fig.height=9,fig.width=5}
+# 1. Check what orig.ident values you have
+table(seu$orig.ident)
+
+# 2. Subset by specific orig.ident
+seu_subset <- subset(seu, subset = orig.ident == "PP-COUPKO-HT7-cre-pos")
+
+# Or subset by multiple samples
+#seu_subset <- subset(seu, subset = orig.ident %in% c("sample1", "sample2"))
+
+# 3. Verify the subset
+table(seu_subset$orig.ident)
+dim(seu_subset)
+
+# 4. Find markers in the subset
+# Option A: Find all markers for all clusters in this subset
+subset_markers <- FindAllMarkers(
+  seu_subset,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+# Option B: Find markers for a specific cluster in the subset
+cluster_markers <- FindMarkers(
+  seu_subset,
+  ident.1 = 0,  # change to your cluster of interest
+  min.pct = 0.25
+)
+
+# 5. View top markers
+library(dplyr)
+top_markers <- subset_markers %>%
+  group_by(cluster) %>%
+  top_n(n = 10, wt = avg_log2FC)
+
+print(top_markers)
+
+# 6. Visualize
+DimPlot(seu_subset, group.by = "seurat_clusters", label = TRUE)
+DotPlot(seu_subset, features = unique(top_markers$gene)[1:20]) + RotatedAxis()
+
+# 7. Compare markers across different orig.ident
+# For example, find markers in sample1 vs sample2
+
+)
+```
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

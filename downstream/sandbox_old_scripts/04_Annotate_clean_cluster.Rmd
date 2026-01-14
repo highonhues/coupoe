@@ -1,0 +1,146 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+```{r env_loading, results='FALSE',}
+# Load packages, data and functions
+library(Seurat)
+library(SeuratWrappers)
+library(magicBatch)
+library(BPCells)
+library(batchelor)
+library(patchwork)
+library(Azimuth)
+library(plotly)
+library(hdf5r)
+library(kableExtra)
+library(ggplot2)
+library(gridExtra)
+library(DT)
+library(clustree)
+library(Matrix)
+library(scales)
+library(data.table)
+library(dplyr)
+library(ggrepel)
+library(gprofiler2)
+# Set the random number seed
+set.seed(1234)
+```
+
+
+Now we will first look at the structure of the dataset, recluster and map and then annotate and get that side by side plot and then DE.
+
+```{r}
+seu <- readRDS("seu_res0.3_nonBEC_removed.rds")
+```
+
+```{r}
+#first look at the number of cells
+table(seu$orig.ident)
+```
+
+```{r}
+seu
+```
+https://www.biostars.org/p/9585385/
+https://github.com/satijalab/seurat/issues/5532
+
+
+
+note that if you wish to perform additional rounds of clustering after subsetting we recommend
+re-running FindVariableFeatures() and ScaleData()
+
+seu <- FindVariableFeatures(seu, nfeatures=3000)
+seu <- ScaleData(seu)
+seu <- RunPCA(seu)
+seu <- FindNeighbors(seu, dims = 1:35, reduction = "pca")
+
+
+Find variable features in the subset using the RNA assay
+
+```{r}
+DefaultAssay(seu) <- "RNA"
+seu <- FindVariableFeatures(seu, nfeatures=3000)
+```
+
+```{r,fig.width=6}
+top10 <- head(VariableFeatures(seu), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(seu)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot2
+#plot1 +plot2
+```
+
+Run ScaleData on the integrate assay on the new set of variable features
+
+An improvement from next time would be to just not work on the PCA integration since we dgaf about time.
+
+```{r}
+DefaultAssay(seu) <- "mnn.reconstructed"
+```
+
+Before I finish, want to set cellcycle scores just in case
+
+```{r}
+
+s.genes = gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+g2m.genes = gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+seu <- CellCycleScoring(object=seu, s.features=s.genes, g2m.features=g2m.genes, set.ident=T) #set in the meta.data col phase
+
+head(seu[[]])
+```
+
+Finally we scale
+
+```{r}
+seu <- ScaleData(seu, assay = "mnn.reconstructed", verbose = T)
+```
+
+Run PCA on the integrated assay using the new set of variable features
+
+
+```{r}
+seu <- RunPCA(seu,
+              reduction.name = "integrated_bec_pca", 
+              assay = "mnn.reconstructed",
+              features = VariableFeatures(seu),
+              verbose = T)
+```
+```{r}
+ElbowPlot(seu, ndims=50)
+```
+
+```{r}
+seu@reductions
+```
+
+Run FindNeighbors and FindClusters using the new PC dimensions
+
+```{r}
+seu <- FindNeighbors(seu, reduction = "integrated_bec_pca", dims = 1:35)
+```
+
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn.clusters.bec")
+```
+
+
+```{r}
+seu <- RunUMAP(seu, reduction = "integrated_bec_pca", dims = 1:35, reduction.name = "umap.bec")
+```
+```{r}
+head(seu@meta.data)
+```
+
+
+```{r,fig.width=10,fig.height=4}
+DimPlot(seu, reduction = 'umap.bec', group.by = 'mnn.clusters.bec', label = TRUE)|DimPlot(seu, reduction = 'umap.bec', group.by = 'genotype') #+ ggtitle("Blood Endothelial Cells Clustered, Batch Effect Removed")
+
+#condition|clusters
+```
