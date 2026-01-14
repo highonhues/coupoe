@@ -1,5 +1,5 @@
 ---
-title: "05_PP_CRP"
+title: "05_PP_CapEC2"
 author: "Ananya Gupta"
 date: "2025-11-26"
 output: html_document
@@ -69,7 +69,7 @@ base_dir <- "PP_outputs"
 # Define output directories
 rds_dir  <- file.path(base_dir, "PP_all_rep_rds")
 fig_dir  <- file.path(base_dir, "PP_all_rep_figs")
-celltype_dir <- file.path(base_dir, "PP_CapEC1")
+celltype_dir <- file.path(base_dir, "PP_Artery")
 dir.create(celltype_dir, showWarnings = FALSE, recursive = TRUE)
 
 
@@ -78,7 +78,7 @@ dir.create(base_dir, showWarnings = FALSE)
 dir.create(rds_dir, showWarnings = FALSE)
 dir.create(fig_dir, showWarnings = FALSE)
 ```
-
+this is the newer one
 ```{r}
 library(Cairo)
 save_pub <- function(plot,
@@ -162,21 +162,6 @@ ets_family_genes <- c(
 # 
 # all_paths <- keggList("pathway", "mmu")
 # 
-# ## 2. Turn each KEGG pathway into a gene-symbol set
-# kegg_gs <- lapply(names(all_paths), function(pid) {
-#   info <- keggGet(pid)[[1]]
-#   genes <- info$GENE
-#   if (is.null(genes)) return(NULL)
-# 
-#   # KEGG returns: c("ID1", "SYMBOL1; desc", "ID2", "SYMBOL2; desc", ...)
-#   symbols <- genes[seq(2, length(genes), 2)]
-#   symbols <- sapply(strsplit(symbols, ";"), `[`, 1)
-#   trimws(symbols)
-# })
-# names(kegg_gs) <- names(all_paths)
-# kegg_gs <- kegg_gs[!sapply(kegg_gs, is.null)]
-
-#kegg_gs
 ```
 
 kegg_gs is genes for each mouse pathway that we grab.
@@ -432,7 +417,7 @@ dge_prepare <- function(pb) {
 
 ##DGE
 ```{r}
-pb_pcv <- pseudobulk_celltype(seu, celltype = "CapEC1")
+pb_pcv <- pseudobulk_celltype(seu, celltype = "Artery")
 pcv_dge <- dge_prepare(pb_pcv)
 
 
@@ -507,10 +492,10 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 185
+1] 611
 
 FALSE  TRUE 
-   77   108 
+  276   335 
 ```{r}
 #ibrary(dplyr)
 
@@ -551,7 +536,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'OE vs WT (CapEC1)',
+  title = 'OE vs WT (Artery)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -577,7 +562,7 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = 'OE vs WT - Adhesion Molecules CapEC1'
+  title = 'OE vs WT - Adhesion Molecules Artery'
 )
 
 save_pub(plot=p,filename= "deg_oe_wt_goi_EVplot", width = 9,height=7)
@@ -616,10 +601,10 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = 'Is There Reprogramming of CapEC1 to HEV? OE vs WT'
+  title = 'Is There Reprogramming of CapEC2 to HEV? OE vs WT'
 )
 
-save_pub(plot=p,filename= "degtrecreprog", width = 9,height=7)
+save_pub(plot=p,filename= "deg_oewtec2reprog", width = 9,height=7)
 ```
 
 
@@ -651,7 +636,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CapEC1: OE vs WT"
+  main = "Top 50 DEGs for Art: OE vs WT"
 )
 
 p
@@ -791,12 +776,14 @@ top_ets
 
 
 ```
+
+
 ```{r}
 p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC1 (OE vs WT)",
+    title = "ETS-related enrichment Artery (OE vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -807,7 +794,7 @@ save_pub(plot=p, filename="ets_top20_dotplot_deg_oe_wt", width=8, height=8)
 ```
 
 
-Absolutely no relevant enrichment in Capec1 oe v wt!
+Absolutely no relevant enrichment in art oe v wt!
 
 
 
@@ -892,7 +879,7 @@ for (pid in kegg_ids) {
     gene.data  = ranks_entrez,
     pathway.id = pid,
     species    = "mmu",
-    out.suffix = paste0("OE_vs_WT_hev", pid)
+    out.suffix = paste0("OE_vs_WT_art", pid)
   )
 }
 
@@ -926,11 +913,10 @@ table(sig_genes$logFC > 0)
 # FALSE (down in OE): xxx
 # TRUE (up in OE): xxx
 ```
-[1] 314
+1] 611
 
 FALSE  TRUE 
-  159   155 
-  
+  276   335 
   
 ```{r}
 #ibrary(dplyr)
@@ -969,7 +955,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'KO vs WT (CapEC1)',
+  title = 'KO vs WT (Artery)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -994,7 +980,7 @@ p <- EnhancedVolcano(
   drawConnectors = TRUE,         # Draw lines to labels
   widthConnectors = 0.5,
   colConnectors = 'black',
-  title = 'KO vs WT - Adhesion Molecules CapEC1'
+  title = 'KO vs WT - Adhesion Molecules Artery'
 )
 
 save_pub(plot=p,filename= "deg_ko_wt_goi_EVplot", width = 9,height=7)
@@ -1028,7 +1014,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CapEC1: KO vs WT"
+  main = "Top 50 DEGs for CapEC2: KO vs WT"
 )
 
 p
@@ -1158,7 +1144,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC1 (KO vs WT)",
+    title = "ETS-related enrichment CapEC2 (KO vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -1176,7 +1162,7 @@ p <- ggplot(top_ets, aes(x = NES, y = reorder(pathway, NES))) +
   geom_point(aes(size = -log10(padj), color = NES)) +
   scale_color_gradient2(low = "blue", high = "red", mid = "white") +
   labs(
-    title = "ETS-related enrichment CapEC1 (KO vs WT)",
+    title = "ETS-related enrichment CapEC2 (KO vs WT)",
     x = "Normalized Enrichment Score (NES)",
     y = "ETS target sets",
     size = "-log10(FDR)"
@@ -1234,7 +1220,7 @@ for (pid in kegg_ids) {
     gene.data  = ranks_entrez,
     pathway.id = pid,
     species    = "mmu",
-    out.suffix = paste0("KO_vs_WT_capec1", pid)
+    out.suffix = paste0("KO_vs_WT_capec2", pid)
   )
 }
 
@@ -1324,7 +1310,7 @@ p <- EnhancedVolcano(
   pointSize = 2.0,
   labSize = 5,
   #col = c('grey30', 'grey30', 'royalblue', 'red2'),
-  title = 'OE vs KO (HEV)',
+  title = 'OE vs KO (CapEC1)',
   subtitle = 'DEG Volcano Plot',
   caption = 'Right = Upregulated | Left = Downregulated',
   legendPosition = 'right'
@@ -1383,7 +1369,7 @@ p <- pheatmap(
     Condition = pcv_dge$meta$condition,
     row.names = colnames(top_genes_mat)
   ),
-  main = "Top 50 DEGs for CAPEC2: OE vs KO"
+  main = "Top 50 DEGs for CAPEC1: OE vs KO"
 )
 
 p
@@ -1567,7 +1553,7 @@ ranks_entrez <- ranks_entrez[!is.na(names(ranks_entrez))]
 
 ```
 
-
+not doing this
 ```{r}
 kegg_ids <- ets_kegg$pathway   # the enriched KEGG IDs you filtered
 

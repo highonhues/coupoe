@@ -831,6 +831,147 @@ saveRDS(
 ```
 
 
+```{r}
+#Diagnostic Resolution
+seu_obj <- Seurat::FindClusters(seu, resolution = seq(0.1, 0.6, by=0.1))
+
+```
+
+```{r Find best cluster resolution,fig.height=8,fig.width=10}
+
+clustree::clustree(seu_obj@meta.data[,grep("RNA_snn_res.", colnames(seu_obj@meta.data))],prefix = "RNA_snn_res.", layout="sugiyama")+ggtitle("Finding Best Resolution")+
+  theme(
+    plot.title = element_text(
+      hjust = 0.5,       # centers the title
+      margin = margin(b = 12)  # adds space (bottom margin)
+    )
+  )
+```
+
+```{r,fig.height=15,fig.width=7}
+p <- Seurat::DimPlot(seu_obj, group.by = c("RNA_snn_res.0.1","RNA_snn_res.0.2", "RNA_snn_res.0.3"),label=TRUE, ncol=1)
+
+save_pub(plot=p, filename="MLN_Clust_Finding_res",width =7, height=15)
+```
+I'm torn between 0.2 and 0.3?? I wanna try both I think bec they both have the same resolution.
+
+
+Let's start with 0.3 first
+
+
+```{r}
+
+Idents(seu_obj) <- "RNA_snn_res.0.3"
+```
+
+```{r}
+
+markers_all_03res <- FindAllMarkers(
+  seu_obj,
+  only.pos = TRUE,
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+```
+
+
+```{r}
+write.csv(markers_all_03res,
+          file = "MLN_outputs/markers_all_03res.csv",
+          row.names = FALSE)
+
+```
+
+```{r}
+top20_03res <-
+  markers_all_03res %>%
+  dplyr::group_by(cluster) %>%
+  dplyr::top_n(n = 20, wt = avg_log2FC) 
+knitr::kable(top20, align = "c")
+```
+
+```{r,fig.width=9}
+FeaturePlot(seu_obj,c("Nr2f2","Madcam1","Acta2"),label=T)
+```
+8 is showing some pericyte endothlial cell str lemme check if its a doublet. deosnt look it ok 
+
+```{r}
+
+FeatureScatter(
+  seu_obj,
+  feature1 = "nCount_RNA",
+  feature2 = "nFeature_RNA",
+  split.by = "RNA_snn_res.0.3")
+
+
+```
+
+so lets cluster at 0.3 and rename and then new
+
+
+
+
+
+```{r}
+seu <- FindClusters(seu, resolution = 0.3, cluster.name = "mnn_clusters")
+```
+
+```{r,fig.width=8,fig.height=5}
+p <- DimPlot(seu, group.by="seurat_clusters",)  + ggtitle("MLN Clusters Identified") +
+  theme(plot.title = element_text(hjust = 0.5))
+#p <- p +LabelClusters(p, id = "seurat_clusters",  fontface = "bold", size = 5, bg.colour = "white", bg.r = .2, force = 0)
+```
+
+```{r}
+save_pub(plot=p, filename="MLN_clust_nolabel")
+```
+CHECK WHAT SEPARATES LEC1 AND 2
+
+```{r}
+# Initialize empty column
+seu@meta.data$cluster_annot <- NA
+
+# Map each cluster manually
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 0] <- "Madcam1+ HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 1] <- "Aqp7+ CapEC/ CapEC1"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 2] <- "Artery"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 3] <- "PCV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 4] <- "HEV"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 5] <- "LEC1"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 6] <- "Pericytes"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 7] <- "Unknown EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 8] <- "Pericyte EC"
+seu@meta.data$cluster_annot[seu@meta.data$seurat_clusters == 9] <- "LEC2"
+
+# Set as identity
+Idents(seu) <- "cluster_annot"
+
+# Verify
+table(seu@meta.data$cluster_annot)
+```
+
+```{r}
+an <- DimPlot(seu, group.by="cluster_annot") + ggtitle("Annotated MLN") +
+  theme(plot.title = element_text(hjust = 0.5))
+LabelClusters(an, id = "cluster_annot",  fontface = "bold", size = 2.5, bg.colour = "white", bg.r = .2, force = 0)
+```
+```{r}
+an
+```
+
+
+
+```{r,fig.width=9,fig.height=10}
+FeaturePlot(seu_obj,c("Nr2f2","Madcam1","Sele"),label=T)
+```
+
+
+
+
+
+
+
 
 ```{r}
 
