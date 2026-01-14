@@ -1,3 +1,0 @@
-2025-08-27 04:12:22	2s	distraught_kirch	OK	5442ea4a7b055edb930701330c05eba7	bae3369c-5e75-4ba5-9bc5-deee1c8dfe91	nextflow run main.nf --samplesheet samplesheet.csv
-2025-08-27 04:13:39	1.6s	lonely_rutherford	OK	5442ea4a7b055edb930701330c05eba7	ffe4f502-d078-495b-ab2b-ccc8321653df	nextflow run main.nf --samplesheet samplesheet.csv
-2025-08-27 04:14:20	1.8s	ecstatic_laplace	OK	5442ea4a7b055edb930701330c05eba7	8c7f1839-9c4a-4a65-8b83-2c1fb5c5da19	nextflow run main.nf --samplesheet samplesheet.csv
