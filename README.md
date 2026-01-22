@@ -18,7 +18,7 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 
 ## Pipelines (High-Level Notes)
 ### 1. Cell Ranger / Preprocessing
-- `cellranger multi` with hashing demux into WT / OE / KO. I designed a pipeline step in case you prefer to use `cellranger count` and `CITE-seq-Count` on the v3 chemistry with custom params. The output results are comparable to HTO demux and MULTIseqDemux. You can use the comparitive analysis script on your own data.
+- `cellranger multi` with hashing demux into WT / OE / KO. I designed a pipeline step in case you prefer to use `cellranger count` and `CITE-seq-Count` on the v3 chemistry with custom params. The output results are comparable to HTO demux and MULTIseqDemux. You can use the comparitive analysis script on your own data (see `sandbox_old_scripts/01_pp_till_clust.Rmd`). 
 - Initial QC: nFeature/nCount/Ribo/MT filtering (tissue-specific thresholds).
 - Seurat object construction for multi assay (RNA + HTO assays). Seurat v5 object stores samples in layers.
 
