@@ -1,0 +1,6 @@
+input_mode: sra  # options: sra | bam | 
+samples_sra: metadata/samples_sra.csv
+
+# directories should exist before running pipeline
+fastq_data: /scratch/home/agupta1/coup/data/pipelinetest/fq_data
+results: /scratch/home/agupta1/coup/data/pipelinetest/res_data
