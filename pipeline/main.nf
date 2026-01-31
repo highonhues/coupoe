@@ -1,27 +1,12 @@
 #!/usr/bin/env nextflow
 
-params.samplesheet = "samples.csv"
 
+
+include { SRA_DOWNLOAD } from './modules/sradownload.nf'
+
+sra_channel = Channel.fromPath(params.samples_sra)
+              .splitCsv(header:true)
+              .map{row -> tuple(row.sample_id,row.condition, row.srr, row.lane)}
 workflow {
-    println "=== Starting workflow ==="
-    
-    Channel.fromPath(params.samplesheet)
-        .splitCsv(header: true)
-        .view { "After splitCsv: $it" }
-        .map { row ->
-            def meta = [id: row.sample, condition: row.condition]
-            def reads = [row.fastq_1, row.fastq_2]
-                .findAll { it }
-                .collect { file(it) }
-            return [meta, reads]
-        }
-        .view { "After first map: $it" }
-        .groupTuple(by: [0])
-        .view { "After groupTuple: $it" }
-        .map { meta, reads_list ->
-            // Flatten the nested lists
-            def all_reads = reads_list.flatten()
-            return [meta, all_reads]
-        }
-        .view { "Final result: $it" }
+    SRA_DOWNLOAD(sra_channel)
 }

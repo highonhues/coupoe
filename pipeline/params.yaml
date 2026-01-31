@@ -1,6 +1,9 @@
 input_mode: sra  # options: sra | bam | 
 samples_sra: metadata/samples_sra.csv
+samples_bam: metadata/samples_bam.csv
+samples_fastq: metadata/samples_fastq.csv
 
-# directories should exist before running pipeline
-fastq_data: /scratch/home/agupta1/coup/data/pipelinetest/fq_data
-results: /scratch/home/agupta1/coup/data/pipelinetest/res_data
+# directories dont need to exist before running pipeline publishdir makes them
+
+fastq_data: /scratch/home/agupta1/coup/data/pipelinetest1/fq_data
+results: /scratch/home/agupta1/coup/data/pipelinetest1/res_data

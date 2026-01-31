@@ -1,6 +1,0 @@
-name: upstream
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - sra-tools=3.2.1
