@@ -1,3 +1,5 @@
+#!/usr/bin/env nextflow
+
 process FASTQC {
 
     tag "${meta.id}"
