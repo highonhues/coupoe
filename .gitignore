@@ -12,6 +12,12 @@ results/
 .nextflow/
 .nf-launch/
 
+#pipeline
+
+pipeline/work/
+pipeline/.nextflow
+pipeline/.nextflow.log*
+
 # Downstream changes
 
 downstream/*.rds
