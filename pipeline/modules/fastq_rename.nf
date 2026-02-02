@@ -36,10 +36,10 @@
         fi
     done
     
-    # Copy and rename to Cell Ranger format
-    cp "${r1}" "${r1_out}"
-    cp "${r2}" "${r2_out}"
-    cp "${i1}" "${i1_out}"
+    # Create symlinks with new names
+    ln -s "${r1}" "${r1_out}"
+    ln -s "${r2}" "${r2_out}"
+    ln -s "${i1}" "${i1_out}"
     
     echo "Complete: ${sample_id} ${condition} ${lane}"
     ls -lh *.fastq.gz
