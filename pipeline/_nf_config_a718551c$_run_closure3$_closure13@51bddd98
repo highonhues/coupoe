@@ -1,2 +1,0 @@
-task_id	hash	native_id	process	tag	status	exit	submit	start	complete	duration	realtime	%cpu	%mem	rss	peak_rss
-1	4c/a905fb	377261	FASTQ_RENAME	PP_WT_L003	COMPLETED	0	2026-02-01 19:08:22.840	2026-02-01 19:08:27.632	2026-02-01 19:08:27.636	4.8s	1.8s	25.5%	0.0%	5.6 MB	5.6 MB
