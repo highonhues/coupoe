@@ -17,6 +17,7 @@ results/
 pipeline/work/
 pipeline/.nextflow
 pipeline/.nextflow.log*
+pipeline/_nf_config_*
 
 # Downstream changes
 
