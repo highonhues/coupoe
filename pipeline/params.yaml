@@ -1,4 +1,4 @@
-input_mode: bam  # options: sra | bam | fastqs
+input_mode: fastq_copy  # options: sra | bam | fastq_copy or fastq_link (
 samples_sra: metadata/samples_sra.csv
 samples_bam: metadata/samples_bam.csv
 samples_fastq: metadata/samples_fastq.csv

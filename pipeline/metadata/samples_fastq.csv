@@ -1,0 +1,2 @@
+sample_id,condition,r1_path,r2_path,i1_path,lane
+PP,WT,/scratch/home/agupta1/coup/data/PP1_0_1_HVNFCBGX3_WT/PP1_0_1_HVNFCBGX3_WT_S1_L003_R1_001.fastq.gz,/scratch/home/agupta1/coup/data/PP1_0_1_HVNFCBGX3_WT/PP1_0_1_HVNFCBGX3_WT_S1_L003_R2_001.fastq.gz,/scratch/home/agupta1/coup/data/PP1_0_1_HVNFCBGX3_WT/PP1_0_1_HVNFCBGX3_WT_S1_L003_I1_001.fastq.gz,L003

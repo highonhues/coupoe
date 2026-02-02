@@ -4,7 +4,7 @@ process BAM_TO_FASTQ_10X {
 
     conda "${projectDir}/envs/bamtofastq.yaml"
 
-    publishDir "${params.fastq_data}/${sample_id}",
+    publishDir "${params.fastq_data}/${sample_id}_${condition}",
         mode: 'copy',
         pattern: "*.fastq.gz"
 
@@ -31,8 +31,13 @@ process BAM_TO_FASTQ_10X {
     # bamtofastq names: bamtofastq_S1_L001_R1_001.fastq.gz
     # new names: {sample_id}_{condition}_S1_L001_R1_001.fastq.gz
     
-    echo "Renaming bamtofastq files"
-    for fq in temp_out/*_fastqs/*.fastq.gz; do
+    # Debug: show what bamtofastq created
+    echo "bamtofastq output structure:"
+    find temp_out -type f -name "*.fastq.gz" 
+    
+    #find and rename
+    echo "Renaming fastq files"
+    for fq in \$(find temp_out -type f -name "*.fastq.gz"); do
         [ -e "\$fq" ] || continue
         
         # Extract the filename
@@ -41,7 +46,7 @@ process BAM_TO_FASTQ_10X {
         # Replace 'bamtofastq' prefix with sample_id_condition
         newname=\$(echo "\$fname" | sed "s/^bamtofastq_/${sample_id}_${condition}_/")
         
-        echo "  \$fname is now \$newname"
+        echo "  \$fname -> \$newname"
         mv "\$fq" "./\$newname"
     done
     
@@ -50,5 +55,6 @@ process BAM_TO_FASTQ_10X {
     
     echo "Complete: ${sample_id}"
     ls -lh *.fastq.gz
+    
     """
 }

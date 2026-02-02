@@ -4,7 +4,7 @@ process SRA_DOWNLOAD {
   conda "${projectDir}/envs/sratools.yaml"
 
   // Files go to: fastq_data/{sample_id}/
-  publishDir "${params.fastq_data}/${sample_id}", 
+  publishDir "${params.fastq_data}/${sample_id}_${condition}", 
         mode: 'copy',
         pattern: "*.fastq.gz"
 
