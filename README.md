@@ -30,7 +30,7 @@ COUP-TFII OE/KO effects in PP + MLN endothelial compartments (10x multi: RNA + H
 - Broad cluster IDs: BEC / LEC / FRC / Lymphocytes. Contaminants removed with subset on cluster identity and module scores.
 
 ### 3. Endothelial Subsetting
-- Subset BEC cluster(s). NOTE: You must reintegrate post clustering!
+- Subset BEC cluster(s). NOTE: You must reintegrate post subset!
 - Re-run PCA/UMAP on BEC-only.
 - Marker-based annotation for HEC/PCV/artery/capillary/CRP/TrEC.
 - Remove lymphoid/FRC contamination based on non-BEC signatures.
